@@ -213,7 +213,7 @@ function renderGame() {
       ${dk('markt', 'markt', 'Markt')}${dk('volk', 'volkmenu', 'Volk')}${dk('bauen', 'bauen', 'Bauen')}${dk('militaer', 'militaer', 'Militär')}${dk('familie', 'familie', 'Familie', s.offers.length > 0 && !me.spouse)}${dk('reich', 'reich', 'Reich')}
       <button class="dk year" data-act="endYear">${ico('jahr')}<span>Jahr ›</span></button>
     </nav>
-    <div class="sheet-back" id="sheetBack" hidden><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"><button class="x" data-act="close" aria-label="Schließen">×</button><div id="sheetBody"></div></section></div>
+    <div class="sheet-back" id="sheetBack" hidden><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"><div class="grab" aria-hidden="true"><i></i></div><button class="x" data-act="close" aria-label="Schließen">×</button><div id="sheetBody"></div></section></div>
     <div class="toast" id="toast" role="status" hidden></div>
   </div>`;
   if (sheet) openSheet(sheet, sheetArg);
@@ -319,7 +319,8 @@ function openSheet(name: string, arg: unknown = null) {
   const back = document.getElementById('sheetBack')!;
   document.getElementById('sheetBody')!.innerHTML = sheetHtml(name, arg);
   back.hidden = false;
-  (back.querySelector('.sheet') as HTMLElement).scrollTop = 0;
+  const sh = back.querySelector('.sheet') as HTMLElement;
+  sh.style.transform = ''; sh.scrollTop = 0;
   if (name === 'battle') playBattle();
 }
 function closeSheet() {
@@ -743,3 +744,38 @@ app.addEventListener('wheel', e => {
   const [px, py] = toSvg(e.clientX, e.clientY);
   zoomAt(e.deltaY > 0 ? 1.12 : 0.89, px, py);
 }, { passive: false });
+
+// Dialoge nach unten wegwischen. Die Geste wird hier abgefangen, damit die App das Artefakt nicht schließt.
+let sw: { y: number; t: number; dy: number; active: boolean; from: number } | null = null;
+app.addEventListener('touchstart', e => {
+  const sh = (e.target as Element).closest('.sheet') as HTMLElement | null;
+  if (!sh || e.touches.length > 1) return;
+  sw = { y: e.touches[0].clientY, t: Date.now(), dy: 0, active: false, from: sh.scrollTop };
+}, { passive: true });
+app.addEventListener('touchmove', e => {
+  const sh = document.querySelector('.sheet') as HTMLElement | null;
+  if (!sw || !sh) return;
+  const dy = e.touches[0].clientY - sw.y;
+  const onGrab = !!(e.target as Element).closest('.grab');
+  if (!sw.active && dy > 6 && (onGrab || sh.scrollTop <= 0) && (onGrab || sw.from <= 0)) { sw.active = true; sh.classList.add('dragging'); }
+  if (sw.active) {
+    e.preventDefault();
+    sw.dy = Math.max(0, dy);
+    sh.style.transform = `translateY(${sw.dy}px)`;
+  } else if (sh.scrollTop <= 0 && dy > 0) e.preventDefault();
+}, { passive: false });
+const swipeEnd = () => {
+  const sh = document.querySelector('.sheet') as HTMLElement | null;
+  if (!sw || !sh) { sw = null; return; }
+  const v = sw.dy / Math.max(1, Date.now() - sw.t);
+  sh.classList.remove('dragging');
+  if (sw.active && (sw.dy > 110 || (sw.dy > 40 && v > 0.6))) {
+    sh.style.transform = 'translateY(100%)';
+    setTimeout(() => { closeSheet(); sh.style.transform = ''; }, 200);
+  } else sh.style.transform = '';
+  sw = null;
+};
+app.addEventListener('touchend', swipeEnd);
+app.addEventListener('touchcancel', swipeEnd);
+// Auch die Karte und Leisten sollen kein Scrollen der Seite auslösen
+app.addEventListener('touchmove', e => { if (!(e.target as Element).closest('.sheet,.start,.end')) e.preventDefault(); }, { passive: false });
