@@ -1,0 +1,499 @@
+<title>Kaiser im Polytopia-Stil</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: eine Spalte wie ein Spiel-Menü, Artwork-Tafeln als "Kacheln" auf Nachtblau. Bewusst nur dunkles Theme (Polytopia-UI). */
+:root{
+  --night:#182031; --panel:#222c42; --panel2:#2c3955; --line:#3a4868;
+  --ink:#f4f1e8; --muted:#a8b2c8; --gold:#f2b53b; --cyan:#3fc3dc; --rose:#e9566a;
+  --display:"Fredoka","Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--night);color:var(--ink);font:16px/1.6 var(--body);margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 80px}
+h1,h2,h3{font-family:var(--display);font-weight:600;text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(44px,9vw,96px);letter-spacing:.01em;color:var(--gold)}
+h2{font-size:clamp(26px,4vw,36px)}
+h3{font-size:20px}
+p{margin:0;max-width:65ch}
+.eyebrow{font:700 12px/1 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+section{display:grid;gap:18px;padding-block:44px;border-top:2px solid var(--line)}
+section:first-of-type{border-top:0}
+.lede{font-size:18px;color:var(--muted)}
+.hero{display:grid;gap:14px;padding-block:8px 24px}
+.art{background:linear-gradient(180deg,#7fd0e8 0%,#c5ecf2 70%,#e9f7ef 100%);border-radius:22px;overflow:hidden;display:block;width:100%;max-width:100%;height:auto}
+.art.dusk{background:linear-gradient(180deg,#2e3a63 0%,#5a5b8c 60%,#c58b8b 100%)}
+.art.plain{background:var(--panel)}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.card{background:var(--panel);border-radius:18px;padding:18px;display:grid;gap:10px;align-content:start;min-width:0}
+.card p{font-size:15px;color:var(--muted)}
+.card h3{color:var(--ink)}
+.fig{display:grid;gap:8px;min-width:0}
+.fig figcaption{font-size:14px;color:var(--muted)}
+figure{margin:0}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.fact{background:var(--panel);border-radius:14px;padding:14px 16px;display:grid;gap:2px}
+.fact b{font:600 26px/1.1 var(--display);color:var(--gold);font-variant-numeric:tabular-nums}
+.fact span{font-size:13px;color:var(--muted)}
+ul.clean{margin:0;padding-left:20px;display:grid;gap:6px;max-width:70ch}
+ul.clean li::marker{color:var(--gold)}
+.steps{display:grid;gap:10px;counter-reset:s;margin:0;padding:0;list-style:none}
+.steps li{display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:start;background:var(--panel);border-radius:14px;padding:12px 14px}
+.steps li::before{counter-increment:s;content:counter(s);font:700 20px/44px var(--display);text-align:center;background:var(--panel2);color:var(--gold);border-radius:50%;width:44px;height:44px}
+.steps b{display:block;font-family:var(--display);font-weight:600;font-size:17px}
+.steps span{color:var(--muted);font-size:15px}
+.tag{display:inline-block;font:700 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border-radius:99px;background:var(--panel2);color:var(--muted)}
+.tag.src{background:#1f4a3a;color:#8fe0b4}
+.tag.new{background:#4a2f1a;color:#ffc27a}
+.note{border-left:4px solid var(--gold);background:var(--panel);border-radius:0 12px 12px 0;padding:12px 16px;color:var(--muted);font-size:15px;max-width:none}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.sw{display:grid;gap:6px;width:112px}
+.sw i{display:block;height:54px;border-radius:12px}
+.sw b{font:600 14px/1.2 var(--display)}
+.sw span{font-size:12px;color:var(--muted)}
+/* Spiel-UI-Mockup */
+.ui{background:#1d2539;border-radius:22px;padding:18px;display:grid;gap:14px;border:3px solid #34425f}
+.ui-top{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:flex;align-items:center;gap:8px;background:#2a3550;border-radius:99px;padding:6px 14px 6px 6px;font:700 15px/1 var(--body);font-variant-numeric:tabular-nums}
+.chip i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 13px/1 var(--display);font-style:normal;color:#1d2539}
+.ui-panel{background:#2a3550;border-radius:16px;padding:16px;display:grid;gap:12px}
+.ui-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.ui-row label{font:600 16px/1.2 var(--display)}
+.price{font:600 28px/1 var(--display);color:var(--gold);font-variant-numeric:tabular-nums}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:600 16px/1 var(--display);border:0;border-radius:99px;padding:12px 18px;color:#14202e;background:var(--cyan);box-shadow:0 4px 0 #2a8ea2;cursor:pointer}
+.btn.alt{background:var(--gold);box-shadow:0 4px 0 #b9832a}
+.btn.ghost{background:#3a4868;color:var(--ink);box-shadow:0 4px 0 #26314a}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #2a8ea2}
+.btn:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--gold)}
+.mood{font:700 13px/1 var(--body);padding:6px 10px;border-radius:99px}
+.q{display:grid;gap:12px}
+.q .card b{font-family:var(--display);font-weight:600;font-size:17px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:560px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:700 12px/1.2 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+td:first-child{font-family:var(--display);font-weight:600;white-space:nowrap}
+.blades{transform-box:fill-box;transform-origin:center;animation:spin 9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.blades{animation:none}}
+footer{color:var(--muted);font-size:14px;display:grid;gap:6px;padding-top:30px;border-top:2px solid var(--line)}
+footer a{color:var(--cyan)}
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <span class="eyebrow">Konzept &amp; Artworks · Entwurf 1</span>
+  <h1>Kaiser</h1>
+  <p class="lede">Ein Nachbau des Wirtschafts- und Aufbauklassikers <b>PC Kaiser</b> (Linel, 1991) im Low-Poly-Look von <i>The Battle of Polytopia</i>. Vom Freiherrn zum Kaiser: Korn verteilen, Land kaufen, Mühlen und Märkte bauen, Ratten und Missernten überleben und am Ende den Dom vollenden.</p>
+  <svg class="art" data-art="hero" viewBox="0 0 900 490" role="img" aria-label="Low-Poly-Insel mit Burg, Mühle, Kornfeldern, Wald und Bergen, davor Bauer, Soldat und der Kaiser"></svg>
+</header>
+
+<section>
+  <span class="eyebrow">1 · Recherche</span>
+  <h2>Was ist „Kaiser“?</h2>
+  <p>Kaiser ist eine rundenbasierte Wirtschafts- und Politiksimulation aus Deutschland. Jede Runde ist ein Jahr. Man regiert ein Fürstentum im Heiligen Römischen Reich und konkurriert mit Mitspielern um die Kaiserkrone. Das Original erschien 1984 auf dem C64 (Ariolasoft). Die Seite auf goodolddays.net beschreibt die <b>DOS-Fassung von Linel (1991)</b>, einen Fan-Remake des C64-Spiels mit besserer Grafik und kompletter Maussteuerung. 1995 folgte noch <i>Kaiser Deluxe</i> (Softgold) mit bis zu 8 Spielern.</p>
+  <div class="facts">
+    <div class="fact"><b>1 Jahr</b><span>pro Runde, mehrere Spieler im Hot-Seat</span></div>
+    <div class="fact"><b>15.000 Taler</b><span>Startkapital jedes Spielers (C64)</span></div>
+    <div class="fact"><b>10.000 ha</b><span>Startland jedes Spielers (C64)</span></div>
+    <div class="fact"><b>20 – 430</b><span>Taler: Spanne des Kornpreises</span></div>
+    <div class="fact"><b>16 – 70</b><span>Taler: Spanne des Landpreises je ha</span></div>
+    <div class="fact"><b>25.000 ha</b><span>+ 100.000 Taler, Palast &amp; Dom für den Kaisertitel (C64)</span></div>
+  </div>
+  <h3>Die Kernmechaniken des Originals</h3>
+  <div class="grid g3">
+    <div class="card"><span class="tag src">Original</span><h3>Korn &amp; Ernte</h3><p>Wetter bestimmt die Ernte. Korn ernährt das Volk. Bei Missernte muss man zukaufen, sonst hungert die Bevölkerung. Wer großzügig verteilt, bekommt Zuwachs und Ansehen.</p></div>
+    <div class="card"><span class="tag src">Original</span><h3>Land- &amp; Kornmarkt</h3><p>Zu Rundenbeginn Korn und Land kaufen oder verkaufen. Die Preise schwanken stark. Mehr Land bringt mehr Bevölkerung und Wachstum.</p></div>
+    <div class="card"><span class="tag src">Original</span><h3>Steuern &amp; Justiz</h3><p>Steuern und Zölle festlegen, Justiz von milde bis streng. Harte Justiz bringt kurzfristig Geld, treibt aber Leute zur Auswanderung.</p></div>
+    <div class="card"><span class="tag src">Original</span><h3>Bauen</h3><p>Marktplätze und Mühlen erhöhen das Einkommen. Für die höchsten Titel braucht man Palast und Kathedrale. Jedes Gebäude setzt eine Mindestmenge Land voraus.</p></div>
+    <div class="card"><span class="tag src">Original</span><h3>Militär &amp; Krieg</h3><p>Nur mit mehreren Spielern. Soldaten aus dem eigenen Volk ausheben oder Söldner anwerben, dann Nachbarn angreifen und Land erobern.</p></div>
+    <div class="card"><span class="tag src">Original</span><h3>Titel</h3><p>Am Ende jedes Jahres prüft das Spiel, ob man die Bedingungen für den nächsten Adelstitel erfüllt. Der letzte Titel ist Kaiser und beendet das Spiel.</p></div>
+  </div>
+  <p class="note">Hinweis zur Recherche: goodolddays.net und die Handbuch-Scans konnte ich aus meiner Umgebung nicht direkt öffnen (Netzwerksperre). Die Fakten oben stammen aus Wikipedia, C64-Wiki, Reviews und Abandonware-Datenbanken. Die genaue Titelleiter und die exakten Schwellenwerte der PC-Version sollten wir vor dem Bau mit dem Handbuch oder einer Partie im Emulator (z. B. dosgamezone.com) abgleichen. Die Titelleiter unten ist deshalb als Vorschlag markiert.</p>
+</section>
+
+<section>
+  <span class="eyebrow">2 · Spielkonzept</span>
+  <h2>Ein Jahr im Fürstentum</h2>
+  <p>Die Regeln bleiben nah am Original. Neu ist die Polytopia-Karte: Statt reiner Zahlentabellen siehst du dein Land als Kacheln, und jeder Kauf, jedes Feld und jedes Gebäude erscheint darauf. Eine Kachel steht für 1.000 ha.</p>
+  <ol class="steps">
+    <li><div><b>Ernte &amp; Wetter</b><span>Wetterkarte des Jahres (Dürre, Regen, gutes Jahr). Die Kornfelder färben sich entsprechend gold oder braun.</span></div></li>
+    <li><div><b>Kornmarkt &amp; Landmarkt</b><span>Kaufen und verkaufen zu schwankenden Preisen. Gekauftes Land wächst als neue Kacheln an deinen Rand.</span></div></li>
+    <li><div><b>Korn verteilen</b><span>Schieberegler „Ration“. Zu wenig: Hunger und Abwanderung. Viel: Zuwanderung, Ansehen, Geburten.</span></div></li>
+    <li><div><b>Steuern &amp; Justiz</b><span>Zoll, Verkaufssteuer, Einkommensteuer, Justiz-Stufe. Die Stimmung wird als Gesichter über den Dörfern angezeigt.</span></div></li>
+    <li><div><b>Bauen</b><span>Gebäude auf freie Kacheln setzen: Markt, Mühle, Speicher, Mauer, Palast- und Dom-Bauabschnitte.</span></div></li>
+    <li><div><b>Militär</b><span>Soldaten ausheben, Söldner anwerben, Krieg erklären (ab 2 Spielern). Schlacht als kurze, animierte Auseinandersetzung auf der Grenzlinie.</span></div></li>
+    <li><div><b>Jahresende</b><span>Ereigniskarte (Ratten, Pest, Rekordernte …), Bilanz, Titelprüfung mit Krönungs-Animation. Dann ist der nächste Spieler dran.</span></div></li>
+  </ol>
+  <h3>Was ich gegenüber dem Original ergänzen würde</h3>
+  <div class="grid g3">
+    <div class="card"><span class="tag new">Neu</span><h3>Sichtbare Karte</h3><p>Land, Felder und Gebäude sind Kacheln. Grenzen zu Nachbarn sind farbig wie bei Polytopia. Krieg verschiebt Kacheln sichtbar.</p></div>
+    <div class="card"><span class="tag new">Neu</span><h3>Fürstenhäuser</h3><p>Bis zu 8 Häuser mit eigener Farbe und einem Vorteil, ähnlich den Stämmen in Polytopia (z. B. Tirol: Bergbau, Holstein: Handel über See).</p></div>
+    <div class="card"><span class="tag new">Neu</span><h3>KI-Gegner</h3><p>Das Original lebt vom Hot-Seat. Für Solospiele kommen computergesteuerte Fürsten dazu, mit drei Schwierigkeitsstufen.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">3 · Art Direction</span>
+  <h2>Polytopia-Regeln für das 18. Jahrhundert</h2>
+  <ul class="clean">
+    <li><b>Low-Poly, flach schattiert:</b> jede Fläche hat genau einen Farbton. Oben hell, links mittel, rechts dunkel. Keine Konturen, keine Texturen.</li>
+    <li><b>Isometrische Rauten-Kacheln</b> mit sichtbarer Erdkante. Wasser sitzt etwas tiefer.</li>
+    <li><b>Klötzchen-Figuren:</b> eckiger Kopf, zwei Punkt-Augen, Rumpf in Hausfarbe. Die Rolle erkennt man am Hut (Strohhut, Dreispitz, Helm, Krone).</li>
+    <li><b>Barock statt Steinzeit:</b> Dreispitze, Musketen, Mansarddächer, Kuppeln und Zwiebeltürme ersetzen Polytopias Speere und Hütten.</li>
+    <li><b>Gold für Macht:</b> Gold-Akzente gibt es nur bei Titeln, Palast, Dom und Krone. Damit liest man den Fortschritt sofort.</li>
+  </ul>
+  <h3>Fürstenhäuser &amp; Farben</h3>
+  <div class="swatches" data-art="swatches"></div>
+</section>
+
+<section>
+  <span class="eyebrow">4 · Artworks</span>
+  <h2>Gelände</h2>
+  <svg class="art plain" data-art="terrain" viewBox="0 0 900 230" role="img" aria-label="Sechs Geländekacheln: Wiese, Kornfeld, Missernte, Wald, Berg, Wasser"></svg>
+  <p>Wiese, reifes Kornfeld, Missernte, Wald, Berg, Wasser. Das Kornfeld wechselt je nach Ernte zwischen Gold und Braun, so sieht man die Wetterkarte direkt auf der Karte.</p>
+
+  <h2>Gebäude</h2>
+  <svg class="art plain" data-art="buildings" viewBox="0 0 900 660" role="img" aria-label="Gebäude: Dorf, Mühle, Marktplatz, Kornspeicher, Burg, Palast, Dom"></svg>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Gebäude</th><th>Wirkung</th><th>Herkunft</th></tr></thead>
+      <tbody>
+        <tr><td>Dorf</td><td>Wohnort der Bevölkerung, wächst bei guter Versorgung zur Stadt</td><td><span class="tag new">Neu (Kartenansicht)</span></td></tr>
+        <tr><td>Mühle</td><td>Mehr Einnahmen aus dem Korn, Bedingung für Städte</td><td><span class="tag src">Original</span></td></tr>
+        <tr><td>Marktplatz</td><td>Mehr Steuer- und Handelseinnahmen</td><td><span class="tag src">Original</span></td></tr>
+        <tr><td>Kornspeicher</td><td>Lagert Korn, senkt Rattenverluste</td><td><span class="tag new">Neu</span></td></tr>
+        <tr><td>Burg &amp; Mauer</td><td>Schützt das Land, Verteidigungsbonus im Krieg</td><td><span class="tag src">Original</span></td></tr>
+        <tr><td>Palast</td><td>In Abschnitten gebaut, Pflicht für die höchsten Titel</td><td><span class="tag src">Original</span></td></tr>
+        <tr><td>Dom</td><td>In Abschnitten gebaut, Pflicht für König und Kaiser</td><td><span class="tag src">Original</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Figuren</h2>
+  <svg class="art" data-art="units" viewBox="0 0 900 300" role="img" aria-label="Figuren: Bauer, Mönch, Musketier, Söldner, Fürst und Kaiser"></svg>
+  <p>Bauer, Mönch, Musketier (ausgehobener Soldat), Söldner (angeworben, teurer, stärker), Fürst als Spielerfigur und der Kaiser für das Finale. Die Rumpffarbe zeigt das Fürstenhaus.</p>
+
+  <h2>Titelleiter <span class="tag new" style="vertical-align:middle">Vorschlag</span></h2>
+  <svg class="art dusk" data-art="ranks" viewBox="0 0 900 250" role="img" aria-label="Sieben Kronen von Freiherr bis Kaiser, von links nach rechts größer werdend"></svg>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Titel</th><th>Bedingung (Entwurf, an das Original anlehnen)</th></tr></thead>
+      <tbody>
+        <tr><td>Freiherr</td><td>Start: 10.000 ha, 15.000 Taler</td></tr>
+        <tr><td>Graf</td><td>1 Markt, 1 Mühle, 12.000 ha</td></tr>
+        <tr><td>Fürst</td><td>2 Märkte, 2 Mühlen, Burg, 15.000 ha</td></tr>
+        <tr><td>Herzog</td><td>3 Städte, 18.000 ha, 40.000 Taler</td></tr>
+        <tr><td>Kurfürst</td><td>4 Städte, Palast halb fertig, 21.000 ha</td></tr>
+        <tr><td>König</td><td>Palast fertig, Dom halb fertig, 23.000 ha, 70.000 Taler</td></tr>
+        <tr><td>Kaiser</td><td>5 Städte (je 5 Märkte, 3 Mühlen), 25.000 ha, 100.000 Taler, Palast &amp; Dom (wie C64-Original)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Ereigniskarten</h2>
+  <div class="grid g3" data-art="events"></div>
+
+  <h2>Spielbildschirm</h2>
+  <svg class="art" data-art="map" viewBox="0 0 960 640" role="img" aria-label="Kartenansicht mit zwei Fürstentümern, blauer und roter Grenze, Leiste mit Taler, Korn, Land und Bevölkerung"></svg>
+  <p>Hauptansicht: zwei benachbarte Fürstentümer (Bayern blau, Brandenburg rot). Oben die Ressourcenleiste, unten die Aktionen des Jahres. Ein Tippen auf eine freie Kachel öffnet das Bau-Menü.</p>
+
+  <h2>Kornmarkt-Dialog</h2>
+  <div class="grid g2">
+    <div class="ui" aria-label="Mockup Kornmarkt">
+      <div class="ui-top">
+        <span class="chip"><i style="background:var(--gold)">T</i>18.420</span>
+        <span class="chip"><i style="background:#e9c147">K</i>3.100 Scheffel</span>
+        <span class="chip"><i style="background:#7cc04a">L</i>11.000 ha</span>
+        <span class="chip"><i style="background:#f2c6a0">V</i>2.340</span>
+      </div>
+      <div class="ui-panel">
+        <div class="ui-row"><label>Kornpreis 1734</label><span class="price">112 T</span></div>
+        <div class="btns"><button class="btn" type="button" id="buy">Kaufen 100</button><button class="btn ghost" type="button" id="sell">Verkaufen 100</button></div>
+      </div>
+      <div class="ui-panel">
+        <div class="ui-row"><label for="ration">Ration an das Volk</label><span class="mood" id="mood">Zufrieden</span></div>
+        <input type="range" id="ration" min="0" max="3100" step="50" value="1800">
+        <div class="ui-row"><span id="rationTxt" style="color:var(--muted);font-size:14px">1.800 Scheffel verteilen</span><button class="btn alt" type="button">Jahr fortsetzen</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>So soll sich die Oberfläche anfühlen</h3>
+      <p>Große runde Knöpfe mit Tiefe, dicke Zahlen, wenig Text. Jeder Dialog ist ein Panel über der Karte. Der Ration-Regler links ist anklickbar und zeigt, wie die Stimmung sofort reagiert.</p>
+      <p>Alle Aktionen gehen mit Maus und Touch. Das hat die Linel-Version 1991 schon richtig gemacht: komplett mausbedienbar.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">5 · Technik</span>
+  <h2>Vorschlag zur Umsetzung</h2>
+  <div class="grid g3">
+    <div class="card"><h3>Browser-Spiel</h3><p>HTML5 mit TypeScript. Läuft auf PC, Tablet und Handy, ohne Installation. Die Grafik entsteht als Vektor-Polygone, also gestochen scharf und klein.</p></div>
+    <div class="card"><h3>Regelkern getrennt</h3><p>Die Wirtschaftsformeln (Ernte, Preise, Bevölkerung, Titel) kommen in ein eigenes Modul mit Tests. So können wir sie gegen das Original abgleichen.</p></div>
+    <div class="card"><h3>Meilensteine</h3><p>1. Ein Spieler, eine Runde komplett. 2. Gebäude &amp; Titel. 3. Ereignisse. 4. Hot-Seat &amp; Krieg. 5. KI, Sound, Feinschliff.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">6 · Offen</span>
+  <h2>Was ich von dir brauche, bevor ich loslege</h2>
+  <div class="q grid g2">
+    <div class="card"><b>Wie nah am Original?</b><p>Regeln 1:1 wie 1991 (Zahlen, Titel, Formeln), oder modernisiert mit Karte, Fürstenhäusern und KI wie oben?</p></div>
+    <div class="card"><b>Mehrspieler</b><p>Nur Hot-Seat an einem Gerät wie im Original, oder auch gegen Computer-Fürsten?</p></div>
+    <div class="card"><b>Krieg</b><p>Schlacht automatisch mit Animation, oder eine kleine taktische Schlacht auf Kacheln wie bei Polytopia?</p></div>
+    <div class="card"><b>Plattform &amp; Stil</b><p>Browser passt? Gefallen dir die Artworks so, oder soll es näher an Polytopia (bunter, runder) oder historischer (gedecktere Farben) werden?</p></div>
+  </div>
+</section>
+
+<footer>
+  <b style="font-family:var(--display);color:var(--ink)">Quellen</b>
+  <span><a href="https://www.goodolddays.net/de/game/PCKaiser/">goodolddays.net: PC Kaiser</a> · <a href="https://de.wikipedia.org/wiki/Kaiser_(Computerspiel)">Wikipedia: Kaiser (Computerspiel)</a> · <a href="https://www.c64-wiki.de/wiki/Kaiser">C64-Wiki: Kaiser</a> · <a href="https://dosgamezone.com/game/kaiser-11033.html">DOS Game Zone: Kaiser (1991)</a> · <a href="https://www.squakenet.com/game/kaiser/">SquakeNet: Kaiser (1991)</a> · <a href="https://gamesdb.launchbox-app.com/games/details/145161">LaunchBox: Kaiser</a> · <a href="https://www.mobygames.com/game/37365/kaiser-deluxe/reviews/dos/">MobyGames: Kaiser Deluxe</a></span>
+  <span>Alle Artworks sind eigene Entwürfe im Stil von Polytopia und enthalten kein Originalmaterial.</span>
+</footer>
+</div>
+
+<script>
+(function(){
+const A=50,B=25;
+const f1=n=>n.toFixed(1);
+function sh(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=(n>>8)&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round(r+(t-r)*p);g=Math.round(g+(t-g)*p);b=Math.round(b+(t-b)*p);return '#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);}
+function poly(pts,fill,extra){return `<polygon points="${pts.map(p=>f1(p[0])+','+f1(p[1])).join(' ')}" fill="${fill}"${extra||''}/>`;}
+function rect(x,y,w,h,fill,rx){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"${rx?` rx="${rx}"`:''}/>`;}
+// Iso-Projektion: Szene o={x,y,s}; (u,v) in Kachel-Einheiten, z in Pixeln
+const P=(o,u,v,z)=>[o.x+(u-v)*A*o.s, o.y+(u+v)*B*o.s-(z||0)*o.s];
+
+function tile(o,i,j,top,opt){opt=opt||{};const t=opt.t??14,z=opt.z??0,side=opt.side||'#8a5f3a';
+  const q=(u,v,zz)=>P(o,u,v,zz);let s='';
+  s+=poly([q(i-.5,j+.5,z),q(i+.5,j+.5,z),q(i+.5,j+.5,z-t),q(i-.5,j+.5,z-t)],sh(side,.05));
+  s+=poly([q(i+.5,j-.5,z),q(i+.5,j+.5,z),q(i+.5,j+.5,z-t),q(i+.5,j-.5,z-t)],sh(side,-.25));
+  s+=poly([q(i-.5,j-.5,z),q(i+.5,j-.5,z),q(i+.5,j+.5,z),q(i-.5,j+.5,z)],top);
+  return s;}
+function box(o,u0,v0,u1,v1,z0,z1,c){const q=(u,v,z)=>P(o,u,v,z);
+  return poly([q(u0,v1,z0),q(u1,v1,z0),q(u1,v1,z1),q(u0,v1,z1)],c)
+    +poly([q(u1,v0,z0),q(u1,v1,z0),q(u1,v1,z1),q(u1,v0,z1)],sh(c,-.22))
+    +poly([q(u0,v0,z1),q(u1,v0,z1),q(u1,v1,z1),q(u0,v1,z1)],sh(c,.22));}
+function gableU(o,u0,v0,u1,v1,z,h,c,wall){const q=(u,v,zz)=>P(o,u,v,zz),vm=(v0+v1)/2;
+  return poly([q(u0,v0,z),q(u1,v0,z),q(u1,vm,z+h),q(u0,vm,z+h)],sh(c,.15))
+    +poly([q(u0,v1,z),q(u1,v1,z),q(u1,vm,z+h),q(u0,vm,z+h)],c)
+    +poly([q(u1,v0,z),q(u1,v1,z),q(u1,vm,z+h)],sh(wall,-.22));}
+function gableV(o,u0,v0,u1,v1,z,h,c,wall){const q=(u,v,zz)=>P(o,u,v,zz),um=(u0+u1)/2;
+  return poly([q(u0,v0,z),q(u0,v1,z),q(um,v1,z+h),q(um,v0,z+h)],sh(c,.15))
+    +poly([q(u1,v0,z),q(u1,v1,z),q(um,v1,z+h),q(um,v0,z+h)],sh(c,-.2))
+    +poly([q(u0,v1,z),q(u1,v1,z),q(um,v1,z+h)],wall);}
+function pyr(o,u0,v0,u1,v1,z,h,c){const q=(u,v,zz)=>P(o,u,v,zz),ap=q((u0+u1)/2,(v0+v1)/2,z+h);
+  return poly([q(u0,v1,z),q(u1,v1,z),ap],c)+poly([q(u1,v0,z),q(u1,v1,z),ap],sh(c,-.25));}
+function winL(o,ua,ub,v,za,zb,c){return poly([P(o,ua,v,za),P(o,ub,v,za),P(o,ub,v,zb),P(o,ua,v,zb)],c||'#2d3448');}
+function winR(o,u,va,vb,za,zb,c){return poly([P(o,u,va,za),P(o,u,vb,za),P(o,u,vb,zb),P(o,u,va,zb)],c||'#232a3b');}
+function tri2(x,y,w,h,c){return poly([[x,y],[x-w/2,y+h],[x,y+h]],sh(c,.12))+poly([[x,y],[x+w/2,y+h],[x,y+h]],sh(c,-.18));}
+function tree(o,u,v,k){k=(k||1)*o.s;const [x,y]=P(o,u,v,0);
+  return rect(x-3*k,y-12*k,6*k,12*k,'#7a4f2e')+tri2(x,y-46*k,30*k,26*k,'#3f9a45')+tri2(x,y-60*k,22*k,22*k,'#4aa84e');}
+function pine(o,u,v,k){k=(k||1)*o.s;const [x,y]=P(o,u,v,0);
+  return rect(x-2.5*k,y-10*k,5*k,10*k,'#6b4428')+tri2(x,y-40*k,24*k,32*k,'#2f7f4a')+tri2(x,y-54*k,16*k,22*k,'#368c52');}
+function mountain(o,u,v,k){k=(k||1)*o.s;const [x,y]=P(o,u,v,0);
+  return tri2(x-18*k,y-50*k,62*k,58*k,'#8d96a3')+tri2(x+14*k,y-72*k,74*k,80*k,'#a3abb6')
+    +poly([[x+14*k,y-72*k],[x+1*k,y-58*k],[x+8*k,y-54*k],[x+14*k,y-60*k]],'#ffffff')
+    +poly([[x+14*k,y-72*k],[x+27*k,y-58*k],[x+20*k,y-55*k],[x+14*k,y-60*k]],'#dfe6ee');}
+function rows(o,i,j,c){let s='';for(let k=1;k<5;k++){const a=P(o,i-.45,j-.5+k/5,0),b=P(o,i+.45,j-.5+k/5,0);s+=`<line x1="${f1(a[0])}" y1="${f1(a[1])}" x2="${f1(b[0])}" y2="${f1(b[1])}" stroke="${c}" stroke-width="${3*o.s}" stroke-linecap="round"/>`;}return s;}
+function sheaf(o,u,v,k){k=(k||1)*o.s;const [x,y]=P(o,u,v,0);return tri2(x,y-20*k,14*k,20*k,'#e3a92f')+rect(x-7*k,y-11*k,14*k,3*k,'#b07a22');}
+function waves(o,i,j){const [x,y]=P(o,i,j,-6);return `<path d="M${f1(x-14*o.s)} ${f1(y)} q${7*o.s} ${-5*o.s} ${14*o.s} 0 t${14*o.s} 0" fill="none" stroke="#9fe0f5" stroke-width="${2.5*o.s}" stroke-linecap="round" opacity=".8"/>`;}
+
+const TC={g:'#7cc04a',G:'#6db33f',f:'#e9c147',x:'#b98a52',t:'#5fa83c',m:'#8fbf5a',s:'#e8d79a',w:'#3aa7d9'};
+function terrainTile(o,ch,i,j){
+  if(ch==='w')return tile(o,i,j,TC.w,{z:-6,t:8,side:'#2b7fb3'})+((i*3+j*5)%4===0?waves(o,i,j):'');
+  if(ch==='s')return tile(o,i,j,TC.s,{side:'#b7955f'});
+  let s=tile(o,i,j,TC[ch]||TC.g);
+  if(ch==='f')s+=rows(o,i,j,'#d4a52f');
+  if(ch==='x')s+=rows(o,i,j,'#94683b');
+  return s;}
+
+// Gebäude (u,v = Kachelmitte)
+function house(o,u,v,c,k){k=k||1;const a=.17*k;return box(o,u-a,v-a,u+a,v+a,0,16*k,'#efe3c8')+winL(o,u-.05,u+.05,v+a,3,10*k,'#6b4a2e')+gableU(o,u-a-.02,v-a-.03,u+a+.02,v+a+.03,16*k,13*k,c,'#efe3c8');}
+function village(o,u,v,c){return house(o,u-.18,v-.2,c,.9)+house(o,u+.2,v-.12,c,.8)+house(o,u-.12,v+.2,c,1);}
+function mill(o,u,v,c){const [hx,hy]=P(o,u+.12,v+.12,58);let s=box(o,u-.12,v-.12,u+.12,v+.12,0,52,'#e8dcc2')+winL(o,u-.03,u+.04,v+.12,6,20,'#6b4a2e')+pyr(o,u-.15,v-.15,u+.15,v+.15,52,26,c);
+  let bl='';for(let r=0;r<4;r++)bl+=`<g transform="rotate(${r*90+20} ${f1(hx)} ${f1(hy)})">${rect(f1(hx-2.5*o.s),f1(hy-44*o.s),f1(5*o.s),f1(42*o.s),'#7a4f2e')}${rect(f1(hx+2*o.s),f1(hy-42*o.s),f1(10*o.s),f1(30*o.s),'#f4efe1')}</g>`;
+  return s+`<g class="blades">${bl}<circle cx="${f1(hx)}" cy="${f1(hy)}" r="${f1(46*o.s)}" fill="none"/></g><circle cx="${f1(hx)}" cy="${f1(hy)}" r="${f1(4*o.s)}" fill="#5a3a20"/>`;}
+function stall(o,u,v,c){const a=.11;return box(o,u-a,v-a,u+a,v+a,0,8,'#a8743f')+box(o,u-a+.02,v-a+.02,u-a+.04,v-a+.04,8,22,'#7a4f2e')+box(o,u+a-.04,v+a-.04,u+a-.02,v+a-.02,8,22,'#7a4f2e')+gableU(o,u-a-.03,v-a-.03,u+a+.03,v+a+.03,22,8,c,'#f4efe1');}
+function market(o,u,v,c){const [x,y]=P(o,u,v,0);return poly([P(o,u-.42,v-.42,1),P(o,u+.42,v-.42,1),P(o,u+.42,v+.42,1),P(o,u-.42,v+.42,1)],'#d9cdb0')
+  +stall(o,u-.2,v-.2,c)+stall(o,u+.2,v-.18,'#f2b53b')+box(o,u-.06,v-.06,u+.06,v+.06,0,7,'#9aa3ad')+poly([P(o,u-.04,v-.04,7),P(o,u+.04,v-.04,7),P(o,u+.04,v+.04,7),P(o,u-.04,v+.04,7)],'#3aa7d9')+stall(o,u-.15,v+.22,'#e9566a')+box(o,u+.18,v+.16,u+.28,v+.26,0,9,'#c79a5a');}
+function granary(o,u,v,c){let s='';for(const du of[-.25,.25])for(const dv of[-.15,.15])s+=box(o,u+du-.03,v+dv-.03,u+du+.03,v+dv+.03,0,8,'#6b4428');
+  return s+box(o,u-.3,v-.2,u+.3,v+.2,8,34,'#b07a45')+winL(o,u-.06,u+.06,v+.2,12,28,'#5a3a20')+gableU(o,u-.33,v-.24,u+.33,v+.24,34,20,'#8a5a32','#b07a45');}
+function tower(o,u,v,a,h,c,roof,rh){return box(o,u-a,v-a,u+a,v+a,0,h,c)+winL(o,u-.02,u+.02,v+a,h-16,h-7)+pyr(o,u-a-.02,v-a-.02,u+a+.02,v+a+.02,h,rh||22,roof);}
+function flag(o,u,v,z,c){const [x,y]=P(o,u,v,z);return `<line x1="${f1(x)}" y1="${f1(y)}" x2="${f1(x)}" y2="${f1(y-26*o.s)}" stroke="#5a3a20" stroke-width="${2*o.s}"/>`+poly([[x,y-26*o.s],[x+18*o.s,y-21*o.s],[x,y-15*o.s]],c);}
+function castle(o,u,v,c){const st='#c9cdd3';let s='';
+  s+=tower(o,u-.36,v-.36,.09,40,st,c);
+  s+=box(o,u-.36,v-.38,u+.36,v-.32,0,26,st)+box(o,u-.38,v-.36,u-.32,v+.36,0,26,st);
+  s+=tower(o,u+.36,v-.36,.09,40,st,c)+tower(o,u-.36,v+.36,.09,40,st,c);
+  s+=box(o,u-.16,v-.16,u+.16,v+.16,0,62,'#d6dade')+winL(o,u-.06,u+.06,v+.16,40,52)+winR(o,u+.16,v-.06,v+.06,40,52)+pyr(o,u-.19,v-.19,u+.19,v+.19,62,34,c)+flag(o,u,v,96,c);
+  s+=box(o,u-.36,v+.32,u+.36,v+.38,0,26,st)+box(o,u+.32,v-.36,u+.38,v+.36,0,26,st)+winL(o,u-.06,u+.06,v+.38,0,16,'#5a3a20');
+  s+=tower(o,u+.36,v+.36,.09,40,st,c);return s;}
+function palace(o,u,v,c){const w='#f1e6cf',g='#f2b53b';let s='';
+  s+=box(o,u-.42,v-.42,u-.18,v+.06,0,34,w)+gableV(o,u-.44,v-.44,u-.16,v+.08,34,14,'#5f6f8f',w);
+  s+=box(o,u-.3,v-.18,u+.42,v+.18,0,44,w);
+  for(let k=0;k<5;k++){const uu=u-.24+k*.13;s+=winL(o,uu,uu+.06,v+.18,14,32,'#2d3448');}
+  s+=winR(o,u+.42,v-.1,v-.03,14,32)+winR(o,u+.42,v+.03,v+.1,14,32);
+  s+=gableU(o,u-.32,v-.2,u+.44,v+.2,44,16,'#5f6f8f',w);
+  s+=box(o,u-.06,v-.06,u+.1,v+.1,44,64,w)+pyr(o,u-.09,v-.09,u+.13,v+.13,64,26,g)+flag(o,u+.02,v+.02,90,c);
+  s+=box(o,u+.18,v+.18,u+.42,v+.42,0,34,w)+winL(o,u+.24,u+.36,v+.42,10,26)+winR(o,u+.42,v+.24,v+.36,10,26)+gableV(o,u+.16,v+.16,u+.44,v+.44,34,14,'#5f6f8f',w);
+  return s;}
+function dom(o,u,v,c){const w='#e4ddd0',r='#7d6b8f';let s='';
+  s+=box(o,u-.44,v-.16,u+.16,v+.16,0,50,w);
+  for(let k=0;k<4;k++){const uu=u-.38+k*.14;s+=winL(o,uu,uu+.05,v+.16,14,38,'#4b6aa8');}
+  s+=gableU(o,u-.46,v-.18,u+.16,v+.18,50,30,r,w);
+  s+=box(o,u-.2,v-.36,u-.02,v+.36,0,46,w)+gableV(o,u-.22,v-.38,u,v+.38,46,26,r,w);
+  for(const vv of[-.28,.2]){s+=box(o,u+.16,v+vv,u+.38,v+vv+.12,0,92,w)+winR(o,u+.38,v+vv+.03,v+vv+.09,62,80,'#4b6aa8')+winL(o,u+.22,u+.32,v+vv+.12,62,80,'#4b6aa8')+pyr(o,u+.14,v+vv-.02,u+.4,v+vv+.14,92,46,r);}
+  s+=box(o,u+.16,v-.16,u+.38,v+.2,0,58,w);
+  const [rx,ry]=P(o,u+.38,v+.02,38);s+=`<ellipse cx="${f1(rx)}" cy="${f1(ry)}" rx="${f1(8*o.s)}" ry="${f1(11*o.s)}" fill="#4b6aa8"/>`+winR(o,u+.38,v-.04,v+.08,0,20,'#5a3a20');
+  const [cx,cy]=P(o,u+.27,v+.02,58);s+=rect(f1(cx-1.5*o.s),f1(cy-22*o.s),f1(3*o.s),f1(22*o.s),'#f2b53b')+rect(f1(cx-7*o.s),f1(cy-16*o.s),f1(14*o.s),f1(3*o.s),'#f2b53b');
+  return s;}
+
+// Figuren (2D, Füße bei x,y)
+function person(x,y,k,c,role){const cl=sh(c,.12),cd=sh(c,-.22),skin='#f2c6a0',skd='#dfa982',dk='#2b2f3a';let back='',g='',front='';
+  const pants=role==='monk'?'#6b4a2e':'#3b3346';
+  if(role==='kaiser')back+=poly([[-17,-38],[17,-38],[22,0],[-22,0]],'#b3282d')+poly([[0,-38],[17,-38],[22,0],[0,0]],'#951f24');
+  if(role==='noble')back+=poly([[-15,-38],[15,-38],[19,-4],[-19,-4]],sh(c,-.35));
+  g+=rect(-8,-14,6,14,pants)+rect(2,-14,6,14,sh(pants,-.25));
+  if(role==='monk'){g+=poly([[-12,-36],[0,-36],[0,0],[-14,0]],'#8a6440')+poly([[0,-36],[12,-36],[14,0],[0,0]],'#6e4f31')+rect(-12,-20,24,3,'#c9a36a');}
+  else{g+=poly([[-11,-36],[0,-36],[0,-12],[-11,-12]],role==='kaiser'?'#f4efe6':cl)+poly([[0,-36],[11,-36],[11,-12],[0,-12]],role==='kaiser'?'#dcd5c8':cd);}
+  if(role==='kaiser')for(const [a,b] of [[-7,-30],[4,-26],[-5,-20],[6,-17]])g+=rect(a,b,2,3,dk);
+  if(role==='soldier')g+=`<path d="M-10 -35 L10 -14 M10 -35 L-10 -14" stroke="#f4efe1" stroke-width="2.5"/>`;
+  if(role==='merc')g+=rect(-11,-30,11,4,'#f2b53b')+rect(0,-22,11,4,'#e9566a');
+  g+=rect(-15,-34,4,15,role==='monk'?'#8a6440':cl)+rect(11,-34,4,15,role==='monk'?'#6e4f31':cd)+rect(-15,-20,4,4,skin)+rect(11,-20,4,4,skd);
+  g+=rect(-10,-56,10,20,skin)+rect(0,-56,10,20,skd)+rect(-6,-49,3,4,dk)+rect(3,-49,3,4,dk);
+  if(role==='farmer'){front+=`<path d="M17 0 V-52 M11 -52 V-60 M17 -52 V-62 M23 -52 V-60 M11 -52 H23" stroke="#8a8f99" stroke-width="2.5" fill="none"/>`.replace('M17 0 V-52','')+`<line x1="17" y1="0" x2="17" y2="-52" stroke="#7a4f2e" stroke-width="3"/>`;
+    g+=poly([[-17,-55],[17,-55],[12,-60],[-12,-60]],'#e8c66a')+poly([[-8,-60],[8,-60],[7,-67],[-7,-67]],'#d9b04f');}
+  if(role==='soldier'){front+=rect(15,-60,3,58,'#6b4428')+`<line x1="16.5" y1="-60" x2="16.5" y2="-76" stroke="#c9cdd3" stroke-width="2"/>`;
+    g+=poly([[-15,-55],[15,-55],[0,-68]],'#22252e')+poly([[-15,-55],[15,-55],[13,-57],[-13,-57]],'#f2b53b');}
+  if(role==='merc'){front+=`<line x1="18" y1="0" x2="18" y2="-92" stroke="#7a4f2e" stroke-width="3"/>`+poly([[18,-104],[14,-92],[22,-92]],'#c9cdd3');
+    g+=poly([[-14,-54],[-10,-62],[0,-67],[0,-54]],'#c3cad3')+poly([[0,-67],[10,-62],[14,-54],[0,-54]],'#9aa3ad')+`<circle cx="2" cy="-70" r="4" fill="#e9566a"/><circle cx="-2" cy="-74" r="4" fill="#f2b53b"/>`;}
+  if(role==='monk')g+=poly([[-12,-36],[-12,-58],[0,-62],[0,-56],[-10,-56],[-10,-36]],'#8a6440')+poly([[0,-62],[12,-58],[12,-36],[10,-36],[10,-56],[0,-56]],'#6e4f31');
+  if(role==='noble'){g+=`<circle cx="-11" cy="-50" r="4.5" fill="#f4f1e8"/><circle cx="-11" cy="-42" r="4" fill="#f4f1e8"/><circle cx="11" cy="-50" r="4.5" fill="#dcd8cc"/><circle cx="11" cy="-42" r="4" fill="#dcd8cc"/>`+rect(-10,-59,20,5,'#ece8dc');
+    front+=`<line x1="17" y1="-18" x2="17" y2="-44" stroke="#f2b53b" stroke-width="3"/><circle cx="17" cy="-46" r="3" fill="#f2b53b"/>`;}
+  if(role==='kaiser'){g+=rect(-12,-40,24,5,'#f4efe6');
+    g+=poly([[-11,-56],[11,-56],[11,-62],[-11,-62]],'#f2b53b')+poly([[-11,-62],[-8,-70],[-5,-62]],'#f2b53b')+poly([[-3,-62],[0,-72],[3,-62]],'#f2b53b')+poly([[5,-62],[8,-70],[11,-62]],'#d99a22')+`<circle cx="0" cy="-59" r="2" fill="#e9566a"/><circle cx="-7" cy="-59" r="1.6" fill="#3fc3dc"/><circle cx="7" cy="-59" r="1.6" fill="#3fc3dc"/>`;
+    front+=`<circle cx="-15" cy="-22" r="5" fill="#f2b53b"/><path d="M-15 -27 V-33 M-18 -30 H-12" stroke="#f2b53b" stroke-width="2"/><line x1="15" y1="-16" x2="19" y2="-52" stroke="#f2b53b" stroke-width="3"/><circle cx="19" cy="-54" r="3.5" fill="#f2b53b"/>`;}
+  return `<g transform="translate(${f1(x)},${f1(y)}) scale(${k})">${back}${g}${front}</g>`;}
+function rat(x,y,k){return `<g transform="translate(${x},${y}) scale(${k})"><path d="M-12 -2 q-14 -2 -20 -12" stroke="#e7a3a8" stroke-width="2" fill="none"/>`+poly([[-13,0],[-6,-10],[0,-11],[0,0]],'#8d96a3')+poly([[0,-11],[8,-9],[15,-2],[16,0],[0,0]],'#6f7884')+`<circle cx="6" cy="-11" r="3.5" fill="#e7a3a8"/><circle cx="11" cy="-6" r="1.4" fill="#22252e"/></g>`;}
+function shadow(x,y,w){return `<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${w}" ry="${w*.35}" fill="#000" opacity=".15"/>`;}
+
+const HOUSES=[['Bayern','#3b7dd8','Ausgeglichen'],['Brandenburg','#d9483b','Militär'],['Sachsen','#46a85a','Bergbau'],['Württemberg','#f0b429','Landwirtschaft'],['Hessen','#8e5bd6','Justiz'],['Holstein','#2bb3b1','Seehandel'],['Tirol','#ef7d32','Berge'],['Pfalz','#d65aa0','Wein']];
+
+function render(name,el){
+  if(name==='hero'){const o={x:450,y:262,s:1.05};let s='';
+    const map=['wwwwwww','wttgmmw','wtggGmw','wffgggw','wffgggw','wgxfggw','wwwwwww'];
+    s+=`<circle cx="790" cy="70" r="40" fill="#fff6c9" opacity=".9"/>`;
+    s+=poly([[90,90],[150,70],[210,92]],'#ffffff',' opacity=".7"')+poly([[640,140],[700,118],[770,142]],'#ffffff',' opacity=".6"');
+    for(let d=0;d<13;d++)for(let i=0;i<7;i++){const j=d-i;if(j<0||j>6)continue;s+=terrainTile(o,map[j][i],i-3,j-3);}
+    const objs=[];const add=(i,j,f)=>objs.push([i+j,f]);
+    add(-2,-2,()=>tree(o,-2.2,-2.1)+tree(o,-1.8,-1.85,.8));
+    add(-1,-2,()=>pine(o,-1.1,-2.2)+pine(o,-.8,-1.8,.8));
+    add(-2,-1,()=>tree(o,-2,-1,1.1));
+    add(1,-2,()=>mountain(o,1,-2));add(2,-2,()=>mountain(o,2,-2,.9));add(2,-1,()=>mountain(o,2,-1,.7));
+    add(0,-1,()=>castle(o,0,-1,'#3b7dd8'));
+    add(1,0,()=>village(o,1,0,'#3b7dd8'));
+    add(-2,1,()=>mill(o,-2,1.6,'#3b7dd8'));
+    add(-1,0,()=>sheaf(o,-1.1,.1)+sheaf(o,-.8,-.1,.8));
+    add(2,1,()=>granary(o,2,1,'#3b7dd8'));
+    add(2,0,()=>tree(o,2.2,.1,.8));
+    add(0,1,()=>shadow(...P(o,-.3,1.1,0),14)+person(...P(o,-.3,1.1,0),1,'#3b7dd8','farmer')+shadow(...P(o,.25,.85,0),14)+person(...P(o,.25,.85,0),1,'#3b7dd8','soldier'));
+    add(1,2,()=>shadow(...P(o,1,2,0),18)+person(...P(o,1,2,0),1.35,'#3b7dd8','kaiser'));
+    add(0,2,()=>sheaf(o,0,2.1)+sheaf(o,.3,1.9,.8));
+    objs.sort((a,b)=>a[0]-b[0]).forEach(x=>s+=x[1]());
+    el.innerHTML=s;}
+
+  if(name==='terrain'){let s='';const labels=['Wiese','Kornfeld','Missernte','Wald','Berg','Wasser'];
+    ['g','f','x','g','g','w'].forEach((ch,k)=>{const o={x:75+k*150,y:95,s:1.15};s+=terrainTile(o,ch,0,0);
+      if(k===3)s+=tree(o,-.15,-.15)+pine(o,.2,.05,.9)+tree(o,-.1,.25,.8);
+      if(k===4)s+=mountain(o,0,0,.95);
+      if(k===1)s+=sheaf(o,.15,.1);
+      if(k===2){const [x,y]=P(o,0,0,0);s+=`<path d="M${x-20} ${y} l12 -4 l8 6 l14 -3" stroke="#7b5530" stroke-width="2.5" fill="none"/>`;}
+      s+=`<text x="${75+k*150}" y="205" fill="#a8b2c8" font-family="Nunito,system-ui" font-weight="700" font-size="15" text-anchor="middle">${labels[k]}</text>`;});
+    el.innerHTML=s;}
+
+  if(name==='buildings'){let s='';const c='#3b7dd8';
+    const items=[['Dorf',village],['Mühle',(o,u,v)=>mill(o,u,v,c)],['Marktplatz',market],['Kornspeicher',granary],['Burg',castle],['Palast',palace],['Dom',dom]];
+    items.forEach(([n,fn],k)=>{const row=k<4?0:1,col=row?k-4:k,cols=row?3:4,x=row?(150+col*300):(112+col*225),y=row?500:150,sc=row?1.55:1.25;
+      const o={x,y,s:sc};s+=tile(o,0,0,'#7cc04a');s+=fn(o,0,0,c);
+      s+=`<text x="${x}" y="${y+(row?92:72)}" fill="#f4f1e8" font-family="Fredoka,system-ui" font-weight="600" font-size="18" text-anchor="middle">${n}</text>`;});
+    el.innerHTML=s;}
+
+  if(name==='units'){let s=`<rect x="0" y="230" width="900" height="70" fill="#8fd16a"/><rect x="0" y="226" width="900" height="8" fill="#7cc04a"/>`;
+    const list=[['farmer','Bauer','#46a85a'],['monk','Mönch','#8a6440'],['soldier','Musketier','#d9483b'],['merc','Söldner','#ef7d32'],['noble','Fürst','#3b7dd8'],['kaiser','Kaiser','#3b7dd8']];
+    list.forEach(([r,n,c],k)=>{const x=80+k*148;s+=shadow(x,236,26)+person(x,236,r==='kaiser'?3:2.6,c,r)+`<text x="${x}" y="276" fill="#26402a" font-family="Fredoka,system-ui" font-weight="600" font-size="18" text-anchor="middle">${n}</text>`;});
+    el.innerHTML=s;}
+
+  if(name==='ranks'){let s='';const names=['Freiherr','Graf','Fürst','Herzog','Kurfürst','König','Kaiser'];
+    names.forEach((n,k)=>{const x=70+k*126,base=170,sc=.9+k*.1;let g='';const G='#f2b53b',Gd='#cf8f1f';
+      if(k===4||k===3)g+=poly([[-20,-14],[20,-14],[16,-44],[-16,-44]],k===4?'#b3282d':'#7d2a6b')+poly([[0,-14],[20,-14],[16,-44],[0,-44]],k===4?'#951f24':'#62205a');
+      if(k===6)g+=poly([[-22,-14],[22,-14],[22,-44],[-22,-44]],'#b3282d');
+      g+=rect(-22,-14,22,12,G)+rect(0,-14,22,12,Gd);
+      if(k===3||k===4)g+=rect(-22,-16,44,6,'#f4efe6')+[-16,-6,4,14].map(a=>rect(a,-14,2,3,'#22252e')).join('');
+      const pts=[0,1,2].includes(k)?[3,5,5][k]:k===5?5:0;
+      for(let p=0;p<pts;p++){const px=-18+p*(36/(pts-1));
+        g+=k===0?`<circle cx="${px}" cy="-17" r="3.5" fill="#f4efe6"/>`:k===1?`<circle cx="${px}" cy="-20" r="4" fill="#f4efe6"/>`+`<line x1="${px}" y1="-14" x2="${px}" y2="-17" stroke="${G}" stroke-width="2"/>`
+          :poly([[px-6,-14],[px,-30-(p%2?0:6)],[px+6,-14]],px<0?G:Gd)+`<circle cx="${px}" cy="${-31-(p%2?0:6)}" r="2.5" fill="${p%2?'#f4efe6':'#e9566a'}"/>`;}
+      if(k===5)g+=`<path d="M-18 -30 Q0 -58 18 -30" fill="none" stroke="${G}" stroke-width="4"/><circle cx="0" cy="-48" r="4" fill="${G}"/><path d="M0 -52 V-60 M-4 -56 H4" stroke="${G}" stroke-width="2.5"/>`;
+      if(k===4||k===3)g+=`<circle cx="0" cy="-48" r="4" fill="${G}"/>`;
+      if(k===6){for(let p=0;p<4;p++){const px=-22+p*11;g+=poly([[px,-14],[px+11,-14],[px+11,-46],[px+5.5,-52],[px,-46]],p<2?G:Gd)+`<circle cx="${px+5.5}" cy="-34" r="3" fill="${['#e9566a','#3fc3dc','#46a85a','#e9566a'][p]}"/>`;}
+        g+=`<path d="M-16 -50 Q0 -78 16 -50" fill="none" stroke="${G}" stroke-width="4"/><path d="M0 -64 V-82 M-6 -76 H6" stroke="${G}" stroke-width="3.5"/>`;}
+      s+=`<ellipse cx="${x}" cy="${base+6}" rx="${30*sc}" ry="${8*sc}" fill="#000" opacity=".2"/><g transform="translate(${x},${base}) scale(${sc*1.35})">${g}</g>`;
+      s+=`<text x="${x}" y="225" fill="#f4f1e8" font-family="Fredoka,system-ui" font-weight="600" font-size="17" text-anchor="middle">${n}</text>`;});
+    el.innerHTML=s;}
+
+  if(name==='swatches'){el.innerHTML=HOUSES.map(([n,c,t])=>`<div class="sw"><i style="background:linear-gradient(90deg,${sh(c,.15)} 50%,${sh(c,-.2)} 50%)"></i><b>${n}</b><span>${t}</span></div>`).join('');}
+
+  if(name==='events'){const ev=[
+      ['Ratten im Speicher','Ein Fünftel des Korns ist weg. Ein Kornspeicher halbiert den Verlust.','#5b4a6e',(o)=>tile(o,0,0,'#9c7a4a')+granary(o,0,0,'#3b7dd8')+rat(...P(o,-.15,.45,0),1.3)+rat(...P(o,.35,.35,0),1.1)+rat(...P(o,.5,-.05,0),.9)],
+      ['Dürre','Die Ernte fällt auf ein Drittel. Korn wird teuer.','#c9773b',(o)=>`<circle cx="${o.x+60}" cy="${o.y-70}" r="26" fill="#ffd34d"/>`+tile(o,0,0,'#b98a52')+rows(o,0,0,'#94683b')+`<path d="M${o.x-30} ${o.y} l14 -5 l10 7 l16 -4" stroke="#6b4a2e" stroke-width="3" fill="none"/>`],
+      ['Rekordernte','Doppelte Ernte. Gute Gelegenheit, Korn zu verkaufen.','#4f9a46',(o)=>`<circle cx="${o.x+62}" cy="${o.y-72}" r="22" fill="#fff1a8"/>`+tile(o,0,0,'#e9c147')+rows(o,0,0,'#d4a52f')+sheaf(o,-.2,-.1,1.2)+sheaf(o,.2,.15,1.2)+sheaf(o,.25,-.25,1)],
+      ['Die Pest','Ein Teil der Bevölkerung stirbt. Mönche und ein Dom mildern die Folgen.','#3b4a5a',(o)=>tile(o,0,0,'#6d8a52')+village(o,0,0,'#5f6f8f')+`<g opacity=".55" fill="#a6e07a"><circle cx="${o.x-40}" cy="${o.y-40}" r="18"/><circle cx="${o.x-18}" cy="${o.y-52}" r="22"/><circle cx="${o.x+18}" cy="${o.y-44}" r="18"/></g>`],
+      ['Aufstand','Zu hohe Steuern und harte Justiz. Die Bauern ziehen vor die Burg.','#7a2f35',(o)=>tile(o,0,0,'#7cc04a')+person(...P(o,-.25,.2,0),1.1,'#46a85a','farmer')+person(...P(o,.15,.35,0),1.1,'#46a85a','farmer')+person(...P(o,.3,-.05,0),1,'#46a85a','farmer')+`<path d="M${o.x+55} ${o.y-70} q-6 -10 0 -18 q6 8 0 18" fill="#ff9a3c"/>`],
+      ['Söldner wollen Sold','Kein Geld in der Kasse? Dann laufen sie zum Nachbarn über.','#7a5a2f',(o)=>tile(o,0,0,'#7cc04a')+person(...P(o,-.15,.15,0),1.2,'#ef7d32','merc')+person(...P(o,.3,.2,0),1.2,'#ef7d32','merc')+`<circle cx="${o.x-58}" cy="${o.y-62}" r="10" fill="#f2b53b"/><text x="${o.x-58}" y="${o.y-58}" font-size="12" font-family="Fredoka,system-ui" font-weight="700" text-anchor="middle" fill="#7a5a2f">T</text>`]];
+    el.innerHTML=ev.map(([t,d,c,fn])=>`<figure class="fig card" style="padding:0;overflow:hidden"><svg viewBox="0 0 300 190" style="display:block;width:100%;height:auto;background:linear-gradient(180deg,${sh(c,.15)},${sh(c,-.25)})" role="img" aria-label="${t}">${fn({x:150,y:120,s:1.5})}</svg><figcaption style="padding:0 16px 16px;display:grid;gap:4px"><b style="font:600 18px/1.2 Fredoka,system-ui;color:#f4f1e8">${t}</b><span>${d}</span></figcaption></figure>`).join('');}
+
+  if(name==='map'){const o={x:480,y:300,s:.92};let s='';
+    const map=['wwwwwwwwww','wwttgggmmw','wtgfggggmw','wtgffgxxgw','wggfgggffw','wwggggffgw','wwgtggggsw','wwwsgggssw','wwwwwssww','wwwwwwwwww'];
+    const own=(i,j)=>{if(map[j]?.[i]===undefined||map[j][i]==='w'||map[j][i]==='s')return 0;return (i<=4&&j>=1&&j<=7)?1:(i>=5&&j>=1&&j<=7)?2:0;};
+    const N=10;for(let d=0;d<2*N-1;d++)for(let i=0;i<N;i++){const j=d-i;if(j<0||j>=N)continue;s+=terrainTile(o,map[j][i],i-4.5,j-4.5);}
+    const cols={1:'#3b7dd8',2:'#d9483b'};
+    for(let j=0;j<N;j++)for(let i=0;i<N;i++){const w=own(i,j);if(!w)continue;const u=i-4.5,v=j-4.5;
+      s+=poly([P(o,u-.5,v-.5,0),P(o,u+.5,v-.5,0),P(o,u+.5,v+.5,0),P(o,u-.5,v+.5,0)],cols[w],' opacity=".12"');
+      const e=[[0,-1,[u-.5,v-.5],[u+.5,v-.5]],[1,0,[u+.5,v-.5],[u+.5,v+.5]],[0,1,[u+.5,v+.5],[u-.5,v+.5]],[-1,0,[u-.5,v+.5],[u-.5,v-.5]]];
+      e.forEach(([di,dj,a,b])=>{if(own(i+di,j+dj)===w)return;const pa=P(o,a[0]*.97+u*.03,a[1]*.97+v*.03,1),pb=P(o,b[0]*.97+u*.03,b[1]*.97+v*.03,1);s+=`<line x1="${f1(pa[0])}" y1="${f1(pa[1])}" x2="${f1(pb[0])}" y2="${f1(pb[1])}" stroke="${cols[w]}" stroke-width="5" stroke-linecap="round"/>`;});}
+    const objs=[];const add=(i,j,f)=>objs.push([i+j,f]);const U=i=>i-4.5;
+    [[2,1],[1,2],[1,3]].forEach(([i,j])=>add(i,j,()=>tree(o,U(i),U(j))+pine(o,U(i)+.25,U(j)+.2,.8)));
+    add(3,6,()=>tree(o,U(3),U(6)));
+    [[7,1],[8,1],[8,2]].forEach(([i,j],k)=>add(i,j,()=>mountain(o,U(i),U(j),.85-k*.1)));
+    add(2,4,()=>castle(o,U(2),U(4),'#3b7dd8'));add(4,2,()=>village(o,U(4),U(2),'#3b7dd8'));add(4,4,()=>mill(o,U(4),U(4),'#3b7dd8'));add(3,5,()=>market(o,U(3),U(5),'#3b7dd8'));add(2,6,()=>village(o,U(2),U(6),'#3b7dd8'));
+    add(7,4,()=>castle(o,U(7),U(4),'#d9483b'));add(6,2,()=>village(o,U(6),U(2),'#d9483b'));add(6,6,()=>granary(o,U(6),U(6),'#d9483b'));add(8,5,()=>village(o,U(8),U(5),'#d9483b'));
+    add(5,4,()=>person(...P(o,U(4)+.62,U(4)+.2,0),.9,'#3b7dd8','soldier')+person(...P(o,U(5)+.3,U(4)-.1,0),.9,'#d9483b','merc'));
+    add(4,5,()=>person(...P(o,U(4),U(5),0),.9,'#3b7dd8','farmer'));
+    objs.sort((a,b)=>a[0]-b[0]).forEach(x=>s+=x[1]());
+    // HUD
+    const chip=(x,lab,val,c)=>`<g transform="translate(${x},18)"><rect width="150" height="38" rx="19" fill="#1d2539" opacity=".92"/><circle cx="19" cy="19" r="13" fill="${c}"/><text x="19" y="24" text-anchor="middle" font-family="Fredoka,system-ui" font-weight="700" font-size="14" fill="#1d2539">${lab}</text><text x="42" y="25" font-family="Nunito,system-ui" font-weight="800" font-size="16" fill="#f4f1e8">${val}</text></g>`;
+    s+=chip(18,'T','18.420','#f2b53b')+chip(178,'K','3.100','#e9c147')+chip(338,'L','11.000 ha','#7cc04a')+chip(498,'V','2.340','#f2c6a0');
+    s+=`<g transform="translate(762,18)"><rect width="180" height="38" rx="19" fill="#3b7dd8"/><text x="90" y="25" text-anchor="middle" font-family="Fredoka,system-ui" font-weight="600" font-size="16" fill="#fff">Graf von Bayern · 1734</text></g>`;
+    const btn=(x,t,c,w)=>`<g transform="translate(${x},572)"><rect y="5" width="${w}" height="46" rx="23" fill="${sh(c,-.3)}"/><rect width="${w}" height="46" rx="23" fill="${c}"/><text x="${w/2}" y="29" text-anchor="middle" font-family="Fredoka,system-ui" font-weight="600" font-size="17" fill="#14202e">${t}</text></g>`;
+    s+=btn(70,'Markt','#3fc3dc',140)+btn(225,'Ration','#3fc3dc',140)+btn(380,'Steuern','#3fc3dc',140)+btn(535,'Bauen','#3fc3dc',140)+btn(690,'Jahr beenden','#f2b53b',200);
+    el.innerHTML=s;}
+}
+document.querySelectorAll('[data-art]').forEach(el=>render(el.dataset.art,el));
+
+// Kornmarkt-Mockup
+const r=document.getElementById('ration'),m=document.getElementById('mood'),t=document.getElementById('rationTxt');
+function upd(){const v=+r.value;t.textContent=v.toLocaleString('de-DE')+' Scheffel verteilen';
+  const [l,bg,fg]=v<900?['Hungersnot','#7a2f35','#ffb3ba']:v<1500?['Murren','#5a4a20','#ffd98a']:v<2300?['Zufrieden','#1f4a3a','#8fe0b4']:['Jubel · Zuwanderung','#1f3f5a','#9fdcf5'];
+  m.textContent=l;m.style.background=bg;m.style.color=fg;}
+r.addEventListener('input',upd);upd();
+})();
+</script>
