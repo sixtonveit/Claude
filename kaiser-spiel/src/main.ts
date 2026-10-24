@@ -2,9 +2,10 @@ import {
   GameState, House, Battle, EventCard, newGame, endYear, human, fmt, titleOf, rulerName, HOUSE_DEFS, BUILD_DEFS, BType,
   buyKorn, sellKorn, buyLand, sellLand, kornCost, kornSellPrice, maxBuyHa, maxSellHa, freeLand, canBuild, build, count, buildLimit,
   recruit, dismiss, hire, fire, strength, maxSoldiers, declareWar, allied, acceptOffer, marryChild, offerHouseName,
-  titleReqs, mood, moodLabel, income, JUSTICE, TITLES_M, TITLES_F, RECRUIT_COST, MERC_COST, MERC_UPKEEP, SOLDIER_UPKEEP, Result, tilesOf,
+  titleReqs, mood, moodLabel, income, capacity, kornBuyPrice, JUSTICE, TITLES_M, TITLES_F, RECRUIT_COST, MERC_COST, MERC_UPKEEP, SOLDIER_UPKEEP, Result, tilesOf,
 } from './rules';
 import * as art from './art';
+import { ico } from './icons';
 
 const KEY = 'kaiser-polytopia-v1';
 const app = document.getElementById('app')!;
@@ -119,21 +120,30 @@ function landBounds(s: GameState) {
   });
   return { x: x0 - 40, y: y0 - 110, w: x1 - x0 + 80, h: y1 - y0 + 150 };
 }
+function fitView() {
+  if (!S) return;
+  const full = landBounds(S), el = document.getElementById('mapwrap');
+  const aspect = el && el.clientWidth ? el.clientHeight / el.clientWidth : full.h / full.w;
+  const w = Math.max(full.w, full.h / aspect);
+  setView({ x: full.x + full.w / 2 - w / 2, y: full.y + full.h / 2 - (w * aspect) / 2, w, h: w * aspect });
+}
 function focusHome() {
   if (!S || window.innerWidth >= 700) return;
   const k = S.map.findIndex(t => t.o === 0 && t.b === 'residenz');
   if (k < 0) return;
   const x = k % S.W, y = Math.floor(k / S.W), sx = S.H * 50 + (x - y) * 50, sy = 25 + (x + y) * 25;
-  const v = landBounds(S), w = v.w * 0.55, h = v.h * 0.55;
-  setView({ x: sx - w / 2, y: sy - h / 2 - 30, w, h });
+  const w = landBounds(S).w * 0.5;
+  setView({ x: sx - w / 2, y: sy - w / 2 - 40, w, h: w });
 }
-function setView(v: { x: number; y: number; w: number; h: number }) {
+// Ausschnitt setzen: Seitenverhältnis wie der Bildschirm, Mitte bleibt im Land
+function setView(v: View) {
   const full = landBounds(S!);
-  const w = Math.max(260, Math.min(full.w * 1.4, v.w)), f = w / v.w;
-  const cx = v.x + v.w / 2, cy = v.y + v.h / 2;
-  view = { x: cx - w / 2, y: cy - (v.h * f) / 2, w, h: v.h * f };
-  view.x = Math.max(full.x - w / 2, Math.min(full.x + full.w - w / 2, view.x));
-  view.y = Math.max(full.y - view.h / 2, Math.min(full.y + full.h - view.h / 2, view.y));
+  const el = document.getElementById('mapwrap');
+  const aspect = el && el.clientWidth ? el.clientHeight / el.clientWidth : v.h / v.w;
+  const w = Math.max(260, Math.min(full.w * 1.4, v.w)), h = w * aspect;
+  const cx = Math.max(full.x, Math.min(full.x + full.w, v.x + v.w / 2));
+  const cy = Math.max(full.y, Math.min(full.y + full.h, v.y + v.h / 2));
+  view = { x: cx - w / 2, y: cy - h / 2, w, h };
   document.getElementById('map')?.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.h}`);
 }
 function zoomAt(f: number, px?: number, py?: number) {
@@ -149,32 +159,59 @@ function toSvg(cx: number, cy: number): [number, number] {
 }
 
 // ---------- Spielbildschirm ----------
+const short = (n: number) => { const a = Math.abs(n); return a >= 100000 ? `${Math.round(n / 1000)}k` : a >= 10000 ? `${(n / 1000).toFixed(1).replace('.', ',')}k` : fmt(n); };
+const WEATHER_SHORT: Record<string, string> = { duerre: 'Dürre', nass: 'Regen', normal: 'Normal', gut: 'Gutes Jahr', rekord: 'Rekord' };
+const RES: [string, string][] = [['taler', 'Taler'], ['korn', 'Korn'], ['land', 'Land'], ['volk', 'Volk'], ['ansehen', 'Ansehen']];
 function chips(h: House): string {
-  const c = (l: string, v: string, col: string, title: string) => `<span class="chip" title="${title}"><i style="background:${col}">${l}</i>${v}</span>`;
-  return c('T', fmt(h.taler), '#f2b53b', 'Taler') + c('K', fmt(h.korn), '#ebc23f', 'Korn in Scheffel') + c('L', `${fmt(h.ha)} ha`, '#74c043', 'Land')
-    + c('V', fmt(h.pop), '#f2c6a0', 'Einwohner') + c('A', String(Math.round(h.rep)), '#3fc3dc', 'Ansehen (0–100)');
+  const v: Record<string, string> = { taler: short(h.taler), korn: short(h.korn), land: short(h.ha), volk: short(h.pop), ansehen: String(Math.round(h.rep)) };
+  return RES.map(([k, l]) => `<button class="chip${popKind === k ? ' on' : ''}" data-act="pop" data-n="${k}" aria-label="${l}: ${v[k]}">${ico(k)}<b>${v[k]}</b></button>`).join('');
+}
+let popKind: string | null = null;
+function popHtml(k: string): string {
+  const s = S!, me = human(s), inc = income(s, me);
+  const plus = inc.tax + inc.markets + inc.fines + inc.other, minus = inc.court + inc.army;
+  const line = (l: string, v: string, cls = '') => `<span>${l}</span><b class="${cls}">${v}</b>`;
+  const box = (title: string, big: string, text: string, rows: string) => `<div class="pop-h">${ico(k)}<div><small>${title}</small><b>${big}</b></div><button class="x sm" data-act="popClose" aria-label="Schließen">×</button></div><p>${text}</p><div class="ledger">${rows}</div>`;
+  switch (k) {
+    case 'taler': return box('Taler', fmt(me.taler), 'Deine Kasse. Damit kaufst du Korn und Land, baust und bezahlst Truppen.',
+      line('Einnahmen (Prognose)', `+${fmt(plus)}`, 'pos') + line('Ausgaben (Prognose)', `−${fmt(minus)}`, 'neg') + line('Überschuss im Jahr', (plus - minus >= 0 ? '+' : '−') + fmt(Math.abs(plus - minus)), 'sum'));
+    case 'korn': return box('Korn', `${fmt(me.korn)} Scheffel`, 'Jeder Einwohner isst einen Scheffel im Jahr. Was übrig bleibt, verdirbt langsam. Unter Volk legst du fest, wie viel verteilt wird.',
+      line('Bedarf im Jahr', fmt(me.pop)) + line('Davon verteilt', fmt(Math.min(me.ration, me.korn))) + line('Ernte dieses Jahr', fmt(me.harvest)) + line('Kornpreis', `${s.kornPrice} T je 100`));
+    case 'land': return box('Land', `${fmt(me.ha)} ha`, 'Je 1.000 ha eine Kachel auf der Karte. Land bringt Ernte, Platz für Einwohner und Bauplätze.',
+      line('Kacheln', String(tilesOf(s, 0).length)) + line('Landpreis', `${s.landPrice} T je ha`) + line('Freie Kacheln im Reich', String(freeLand(s))) + line('Platz für Einwohner', fmt(capacity(s, me))));
+    case 'volk': return box('Einwohner', fmt(me.pop), 'Mehr Einwohner zahlen mehr Steuern. Sie wachsen, wenn genug Korn da ist und Platz im Land.',
+      line('Stimmung', moodLabel(mood(me))) + line('Platz für', fmt(capacity(s, me))) + line('Soldaten', fmt(me.soldiers)) + line('Söldner', fmt(me.mercs)));
+    case 'ansehen': return box('Ansehen', `${Math.round(me.rep)} von 100`, 'Dein Ruf im Reich. Hohes Ansehen lockt Zuwanderer und bringt bessere Heiratsangebote.',
+      line('Steigt durch', 'viel Korn, Titel, Burg') + line('Sinkt durch', 'Hunger, Steuern über 25 %, harte Justiz, Angriffe'));
+  }
+  return '';
+}
+function showPop(k: string | null) {
+  popKind = popKind === k ? null : k;
+  const p = document.getElementById('pop')!;
+  p.hidden = !popKind;
+  if (popKind) p.innerHTML = popHtml(popKind);
+  document.getElementById('chips')!.innerHTML = chips(human(S!));
 }
 function renderGame() {
   const s = S!, me = human(s);
+  popKind = null;
+  const dk = (open: string, icon: string, label: string, dot = false) => `<button class="dk" data-open="${open}">${ico(icon)}<span>${label}</span>${dot ? '<em aria-label="neu"></em>' : ''}</button>`;
   app.innerHTML = `
   <div class="game" style="--hc:${me.def.color}">
+    <div id="mapwrap">${renderMap(s)}</div>
     <header class="hud">
-      <button class="badge" data-open="reich" aria-label="Reich und Titel">
-        <svg viewBox="-28 -62 56 64" aria-hidden="true">${art.crown(me.titleIdx, 0, 0, me.titleIdx < 3 ? 1.25 : 1)}</svg>
-        <span><b>${esc(rulerName(me))}</b><small>Jahr ${s.year} · ${esc(s.weather.name)}</small></span>
-      </button>
       <div class="chips" id="chips">${chips(me)}</div>
+      <button class="badge" data-open="reich" aria-label="${esc(rulerName(me))}, Jahr ${s.year}. Reich und Titel öffnen">
+        <svg viewBox="-28 -62 56 64" aria-hidden="true">${art.crown(me.titleIdx, 0, 0, me.titleIdx < 3 ? 1.25 : 1)}</svg>
+        <span><b>${titleOf(me)}</b><small>${s.year} · ${WEATHER_SHORT[s.weather.id]}</small></span>
+      </button>
     </header>
-    <main class="mapwrap"><div id="mapwrap">${renderMap(s)}</div>
-      <div class="zoom"><button data-act="zoomIn" aria-label="Hineinzoomen">+</button><button data-act="zoomOut" aria-label="Herauszoomen">−</button><button data-act="zoomFit" aria-label="Ganze Karte zeigen">⤢</button></div></main>
-    <nav class="bar">
-      <button class="btn" data-open="markt">Markt</button>
-      <button class="btn" data-open="volk">Volk</button>
-      <button class="btn" data-open="bauen">Bauen</button>
-      <button class="btn" data-open="militaer">Militär</button>
-      <button class="btn" data-open="familie">Familie${s.offers.length && !me.spouse ? ' <em>•</em>' : ''}</button>
-      <button class="btn ghost" data-open="reich">Reich</button>
-      <button class="btn gold" data-act="endYear">Jahr beenden</button>
+    <div class="pop" id="pop" hidden></div>
+    <div class="zoom"><button data-act="zoomIn" aria-label="Hineinzoomen">+</button><button data-act="zoomOut" aria-label="Herauszoomen">−</button><button data-act="zoomFit" aria-label="Ganze Karte zeigen">⤢</button></div>
+    <nav class="dock">
+      ${dk('markt', 'markt', 'Markt')}${dk('volk', 'volkmenu', 'Volk')}${dk('bauen', 'bauen', 'Bauen')}${dk('militaer', 'militaer', 'Militär')}${dk('familie', 'familie', 'Familie', s.offers.length > 0 && !me.spouse)}${dk('reich', 'reich', 'Reich')}
+      <button class="dk year" data-act="endYear">${ico('jahr')}<span>Jahr ›</span></button>
     </nav>
     <div class="sheet-back" id="sheetBack" hidden><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"><button class="x" data-act="close" aria-label="Schließen">×</button><div id="sheetBody"></div></section></div>
     <div class="toast" id="toast" role="status" hidden></div>
@@ -186,8 +223,85 @@ function refresh() {
   const me = human(S);
   document.getElementById('chips')!.innerHTML = chips(me);
   document.getElementById('mapwrap')!.innerHTML = renderMap(S);
+  if (popKind) document.getElementById('pop')!.innerHTML = popHtml(popKind);
   if (sheet) document.getElementById('sheetBody')!.innerHTML = sheetHtml(sheet, sheetArg);
   save();
+}
+
+// ---------- Handel ----------
+type TKind = 'korn' | 'land';
+const trade: Record<TKind, { mode: 'buy' | 'sell'; amt: number }> = { korn: { mode: 'buy', amt: 0 }, land: { mode: 'buy', amt: 0 } };
+const r100 = (n: number) => Math.max(0, Math.floor(n / 100) * 100);
+function tradeMax(k: TKind): number {
+  const s = S!, me = human(s), t = trade[k];
+  if (k === 'korn') {
+    if (t.mode === 'sell') return r100(me.korn);
+    let a = r100((me.taler * 100) / kornBuyPrice(s, me));
+    while (a > 0 && kornCost(s, me, a) > me.taler) a -= 100;
+    return a;
+  }
+  return t.mode === 'buy' ? r100(Math.min(me.taler / s.landPrice, maxBuyHa(s, me))) : r100(maxSellHa(s, me));
+}
+function tradeValue(k: TKind, amt: number): number {
+  const s = S!, me = human(s), t = trade[k];
+  if (k === 'korn') return t.mode === 'buy' ? kornCost(s, me, amt) : Math.floor((amt / 100) * kornSellPrice(s, me));
+  return t.mode === 'buy' ? amt * s.landPrice : Math.floor(amt * s.landPrice * 0.8);
+}
+function tradePreview(k: TKind): string {
+  const s = S!, me = human(s), t = trade[k], buy = t.mode === 'buy', v = tradeValue(k, t.amt), sg = buy ? -1 : 1;
+  const arrow = (a: number, b: number, unit: string) => `${fmt(a)} <i>→</i> <b>${fmt(b)}</b> ${unit}`;
+  const cash = `<div>${ico('taler')}<span>${arrow(me.taler, me.taler + sg * v, 'Taler')}</span></div>`;
+  if (k === 'korn') {
+    const after = me.korn - sg * t.amt;
+    const enough = after >= me.pop ? `<em class="pos">reicht für dein Volk</em>` : `<em class="neg">es fehlen ${fmt(me.pop - after)} für dein Volk</em>`;
+    return cash + `<div>${ico('korn')}<span>${arrow(me.korn, after, 'Scheffel')} · ${enough}</span></div>`;
+  }
+  const after = me.ha - sg * t.amt;
+  return cash + `<div>${ico('land')}<span>${arrow(me.ha, after, 'ha')} · ${Math.max(1, Math.round(after / 1000))} Kacheln</span></div>`;
+}
+function tradeGoLabel(k: TKind): string {
+  const t = trade[k], v = tradeValue(k, t.amt), unit = k === 'korn' ? 'Scheffel' : 'ha';
+  return t.amt ? `${fmt(t.amt)} ${unit} ${t.mode === 'buy' ? 'kaufen' : 'verkaufen'} · ${t.mode === 'buy' ? '−' : '+'}${fmt(v)} T` : 'Menge wählen';
+}
+function tradePanel(k: TKind): string {
+  const s = S!, me = human(s), t = trade[k], max = tradeMax(k);
+  t.amt = Math.min(t.amt, max);
+  const korn = k === 'korn';
+  const price = korn ? s.kornPrice : s.landPrice;
+  const [lo, hi] = korn ? [75, 130] : [30, 50];
+  const tag = price < lo ? ['günstig', 'cheap'] : price > hi ? ['teuer', 'dear'] : ['normal', 'mid'];
+  const tiles = tilesOf(s, 0).length;
+  const quick: [string, number][] = [];
+  if (korn && t.mode === 'buy') { quick.push([me.korn >= me.pop ? 'Bedarf gedeckt' : 'Bedarf decken', Math.ceil(Math.max(0, me.pop - me.korn) / 100) * 100]); quick.push(['Vorrat für 2 Jahre', Math.ceil(Math.max(0, 2 * me.pop - me.korn) / 100) * 100]); }
+  if (korn && t.mode === 'sell') { quick.push(['Überschuss', r100(me.korn - me.pop)]); quick.push(['Alles', r100(me.korn)]); }
+  if (!korn && t.mode === 'buy') quick.push(['+1 Kachel', Math.ceil(Math.max(100, (tiles + .5) * 1000 - me.ha) / 100) * 100], ['+3 Kacheln', Math.ceil(Math.max(100, (tiles + 2.5) * 1000 - me.ha) / 100) * 100]);
+  if (!korn && t.mode === 'sell') quick.push(['−1 Kachel', Math.ceil(Math.max(100, me.ha - (tiles - .5) * 1000 + 1) / 100) * 100]);
+  quick.push(['Höchstmenge', max]);
+  const stock = korn
+    ? `<div class="meter" title="Vorrat im Verhältnis zum Jahresbedarf"><i style="width:${Math.min(100, (me.korn / Math.max(1, me.pop)) * 50)}%"></i><s></s></div><p class="mtext">Vorrat <b>${fmt(me.korn)}</b> · Bedarf <b>${fmt(me.pop)}</b> im Jahr · Strich = 1 Jahr</p>`
+    : `<p class="mtext">Du hast <b>${fmt(me.ha)} ha</b> auf <b>${tiles}</b> Kacheln. Je 1.000 ha eine Kachel. Noch ${freeLand(s)} freie Kacheln im Reich.</p>`;
+  return `<div class="panel trade">
+    <div class="row"><h3 class="ih">${ico(korn ? 'korn' : 'land')}${korn ? 'Korn' : 'Land'}</h3>
+      <div class="pricebox"><span class="tag ${tag[1]}">${tag[0]}</span><b>${price} T</b><small>${korn ? 'je 100 Scheffel' : 'je Hektar'}</small></div></div>
+    ${stock}
+    <div class="seg full"><button data-act="tmode" data-k="${k}" data-n="buy" class="${t.mode === 'buy' ? 'on' : ''}">Kaufen</button><button data-act="tmode" data-k="${k}" data-n="sell" class="${t.mode === 'sell' ? 'on' : ''}">Verkaufen</button></div>
+    <div class="stepper"><button class="round" data-act="tstep" data-k="${k}" data-n="-1" aria-label="Weniger" ${t.amt <= 0 ? 'disabled' : ''}>−</button>
+      <output id="amt-${k}">${fmt(t.amt)} ${korn ? 'Scheffel' : 'ha'}</output>
+      <button class="round" data-act="tstep" data-k="${k}" data-n="1" aria-label="Mehr" ${t.amt >= max ? 'disabled' : ''}>+</button></div>
+    <input type="range" id="rng-${k}" min="0" max="${max}" step="100" value="${t.amt}" aria-label="Menge" ${max ? '' : 'disabled'}>
+    <div class="quick">${quick.map(([l, n]) => `<button data-act="tset" data-k="${k}" data-n="${Math.min(n, max)}" ${n <= 0 || n > max ? 'disabled' : ''}>${l}</button>`).join('')}</div>
+    <div class="preview" id="prev-${k}">${tradePreview(k)}</div>
+    <button class="btn wide ${t.mode === 'sell' ? 'gold' : ''}" id="go-${k}" data-act="tgo" data-k="${k}" ${t.amt ? '' : 'disabled'}>${tradeGoLabel(k)}</button>
+    ${max === 0 ? `<p class="hint">${t.mode === 'buy' ? (korn || maxBuyHa(s, me) >= 100 ? 'Dafür reichen deine Taler nicht.' : 'Es gibt kein freies Land mehr. Erobere es im Krieg.') : korn ? 'Du hast kein Korn zum Verkaufen.' : 'Bebautes Land kann nicht verkauft werden.'}</p>` : ''}
+  </div>`;
+}
+function updateTrade(k: TKind) {
+  const t = trade[k];
+  document.getElementById(`amt-${k}`)!.textContent = `${fmt(t.amt)} ${k === 'korn' ? 'Scheffel' : 'ha'}`;
+  document.getElementById(`prev-${k}`)!.innerHTML = tradePreview(k);
+  const go = document.getElementById(`go-${k}`) as HTMLButtonElement;
+  go.textContent = tradeGoLabel(k);
+  go.disabled = !t.amt;
 }
 let toastTimer = 0;
 function toast(msg: string) {
@@ -198,7 +312,9 @@ function toast(msg: string) {
 function res(r: Result | Battle) { if ('ok' in r && !r.ok && r.msg) toast(r.msg); else if ('ok' in r && r.msg) toast(r.msg); refresh(); }
 
 function openSheet(name: string, arg: unknown = null) {
+  if (name === 'markt' && sheet !== 'markt') { trade.korn.amt = 0; trade.land.amt = 0; }
   sheet = name; sheetArg = arg; confirmWar = -1;
+  if (popKind) showPop(null);
   const back = document.getElementById('sheetBack')!;
   document.getElementById('sheetBody')!.innerHTML = sheetHtml(name, arg);
   back.hidden = false;
@@ -251,19 +367,8 @@ function sheetHtml(name: string, arg: unknown): string {
       if (r.year === s.startYear) h += `<p class="hint">Tipp: Im <b>Markt</b> handelst du Korn und Land, unter <b>Volk</b> verteilst du Korn und legst Steuern fest. Unter <b>Reich</b> siehst du, was für den nächsten Titel fehlt.</p>`;
       return h + `<button class="btn gold wide" data-act="close">Ans Werk</button>`;
     }
-    case 'markt': {
-      const kb = (n: number) => `<button class="btn small" data-act="buyKorn" data-n="${n}" ${kornCost(s, me, n) > me.taler ? 'disabled' : ''}>Kaufen ${fmt(n)}<small>−${fmt(kornCost(s, me, n))} T</small></button>`;
-      const ks = (n: number) => `<button class="btn small ghost" data-act="sellKorn" data-n="${n}" ${n > me.korn ? 'disabled' : ''}>Verkaufen ${fmt(n)}<small>+${fmt(Math.floor(n / 100 * kornSellPrice(s, me)))} T</small></button>`;
-      const lb = (n: number) => `<button class="btn small" data-act="buyLand" data-n="${n}" ${n * s.landPrice > me.taler || n > maxBuyHa(s, me) ? 'disabled' : ''}>Kaufen ${fmt(n)} ha<small>−${fmt(n * s.landPrice)} T</small></button>`;
-      const ls = (n: number) => `<button class="btn small ghost" data-act="sellLand" data-n="${n}" ${n > maxSellHa(s, me) ? 'disabled' : ''}>Verkaufen ${fmt(n)} ha<small>+${fmt(Math.floor(n * s.landPrice * .8))} T</small></button>`;
-      return `<h2 id="sheetTitle">Markt</h2>
-        <div class="panel"><div class="row"><div><h3>Korn</h3><p>Vorrat ${fmt(me.korn)} Scheffel · Bedarf ${fmt(me.pop)} im Jahr</p></div><div class="price">${s.kornPrice}<small>Taler je 100 Scheffel</small></div></div>
-        <div class="btns">${kb(100)}${kb(1000)}${ks(100)}${ks(1000)}</div>
-        <p class="hint">Preise 20–430 Taler. Bei Dürre teuer, bei Rekordernten billig. Korn verdirbt mit der Zeit${count(s, 0, 'speicher') ? ', dein Speicher bremst das' : ', ein Kornspeicher hilft'}.</p></div>
-        <div class="panel"><div class="row"><div><h3>Land</h3><p>${fmt(me.ha)} ha · ${tilesOf(s, 0).length} Kacheln · noch ${freeLand(s)} freie Kacheln im Reich</p></div><div class="price">${s.landPrice}<small>Taler je ha</small></div></div>
-        <div class="btns">${lb(100)}${lb(500)}${lb(1000)}${ls(100)}${ls(1000)}</div>
-        <p class="hint">Je 1.000 ha wächst dein Gebiet um eine Kachel. Mehr Land bringt mehr Ernte, Platz für Einwohner und Bauplätze.</p></div>`;
-    }
+    case 'markt':
+      return `<h2 id="sheetTitle">Markt</h2>${tradePanel('korn')}${tradePanel('land')}`;
     case 'volk': {
       const m = mood(me), inc = income(s, me);
       return `<h2 id="sheetTitle">Volk</h2>
@@ -410,6 +515,7 @@ function renderEnd() {
 // ---------- Eingaben ----------
 app.addEventListener('click', e => {
   const t = (e.target as HTMLElement).closest('[data-act],[data-open]') as HTMLElement | null;
+  if (popKind && !(e.target as HTMLElement).closest('#pop,.chip')) showPop(null);
   if (!t) { if ((e.target as HTMLElement).id === 'sheetBack') closeSheet(); return; }
   if (t.hasAttribute('disabled')) return;
   if (t.dataset.open) { openSheet(t.dataset.open); return; }
@@ -423,22 +529,30 @@ app.addEventListener('click', e => {
       const nm = (document.getElementById('rname') as HTMLInputElement).value.trim() || 'Friedrich';
       startOpts.name = nm;
       S = newGame({ seed: (Date.now() ^ Math.floor(Math.random() * 1e9)) | 0, house: startOpts.house, name: nm, female: startOpts.female, opponents: startOpts.opponents, difficulty: startOpts.difficulty });
-      save(); sheet = null; view = null; renderGame(); focusHome(); openSheet('report'); return;
+      save(); sheet = null; view = null; renderGame(); fitView(); focusHome(); openSheet('report'); return;
     }
-    case 'continue': S = load(); sheet = null; view = null; renderGame(); focusHome(); return;
+    case 'continue': S = load(); sheet = null; view = null; renderGame(); fitView(); focusHome(); return;
     case 'restart': S = null; renderStart(); return;
     case 'menu': save(); S = null; sheet = null; renderStart(); return;
     case 'close': closeSheet(); return;
     case 'zoomIn': zoomAt(0.75); return;
     case 'zoomOut': zoomAt(1.33); return;
-    case 'zoomFit': if (S) setView(landBounds(S)); return;
+    case 'zoomFit': fitView(); return;
   }
   if (!S || !me) return;
+  const k = t.dataset.k as TKind;
   switch (act) {
-    case 'buyKorn': res(buyKorn(S, me, n)); break;
-    case 'sellKorn': res(sellKorn(S, me, n)); break;
-    case 'buyLand': res(buyLand(S, me, n)); break;
-    case 'sellLand': res(sellLand(S, me, n)); break;
+    case 'pop': showPop(t.dataset.n!); break;
+    case 'popClose': showPop(null); break;
+    case 'tmode': trade[k].mode = t.dataset.n as 'buy' | 'sell'; trade[k].amt = 0; refresh(); break;
+    case 'tstep': trade[k].amt = Math.max(0, Math.min(tradeMax(k), trade[k].amt + n * 100)); refresh(); break;
+    case 'tset': trade[k].amt = n; refresh(); break;
+    case 'tgo': {
+      const amt = trade[k].amt, buy = trade[k].mode === 'buy';
+      const r = k === 'korn' ? (buy ? buyKorn(S, me, amt) : sellKorn(S, me, amt)) : (buy ? buyLand(S, me, amt) : sellLand(S, me, amt));
+      if (r.ok) { toast(`${fmt(amt)} ${k === 'korn' ? 'Scheffel' : 'ha'} ${buy ? 'gekauft' : 'verkauft'}.`); trade[k].amt = 0; }
+      res(r); break;
+    }
     case 'justice': me.justice = n; refresh(); break;
     case 'build': { const r = build(S, me, t.dataset.n as BType); if (r.ok) toast(`${BUILD_DEFS.find(d => d.type === t.dataset.n)!.name} gebaut.`); res(r); break; }
     case 'recruit': res(recruit(S, me, n)); break;
@@ -466,6 +580,10 @@ app.addEventListener('input', e => {
   const el = e.target as HTMLInputElement;
   if (!S) { if (el.id === 'rname') startOpts.name = el.value; return; }
   const me = human(S);
+  if (el.id === 'rng-korn' || el.id === 'rng-land') {
+    const k = el.id.slice(4) as TKind;
+    trade[k].amt = Number(el.value); updateTrade(k); return;
+  }
   if (el.id === 'ration') {
     me.ration = Number(el.value);
     const m = mood(me), l = moodLabel(m), pill = document.getElementById('moodPill')!;

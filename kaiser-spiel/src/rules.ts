@@ -532,6 +532,8 @@ export function income(s: GameState, h: House) {
   return { tax: Math.round(tax), markets: Math.round(mk), fines: Math.round(fines), other, court, army };
 }
 
+export const capacity = (s: GameState, h: House) => h.ha * 0.35 * (1 + 0.05 * count(s, h.idx, 'markt'));
+
 // ---------- Jahresende ----------
 function simulate(s: GameState, h: House) {
   const sum: Summary = { tax: 0, markets: 0, fines: 0, other: 0, court: 0, army: 0, interest: 0, net: 0, popStart: h.pop, popEnd: 0, born: 0, died: 0, starved: 0, immig: 0, emig: 0, eaten: 0, spoiled: 0 };
@@ -541,7 +543,7 @@ function simulate(s: GameState, h: House) {
   h.korn -= ration; sum.eaten = ration;
   const r = pop > 0 ? ration / pop : 1;
   const markets = count(s, h.idx, 'markt');
-  const cap = h.ha * 0.35 * (1 + 0.05 * markets);
+  const cap = capacity(s, h);
   const room = clamp(((cap - pop) / cap) * 3, -0.5, 1);
   sum.born = Math.round(pop * 0.032 * Math.min(1, r));
   sum.died = Math.round(pop * 0.02);
