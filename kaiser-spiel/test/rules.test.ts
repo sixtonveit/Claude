@@ -73,6 +73,9 @@ test('gewonnene Schlacht bringt Land', () => {
   const s = game();
   const me = human(s);
   me.soldiers = 500;
+  assert.equal(declareWar(s, 0, 1).hasOwnProperty('ok'), true, 'in den ersten zwei Jahren kein Krieg');
+  endYear(s); endYear(s);
+  me.soldiers = 500;
   const before = tilesOf(s, 0).length;
   const b = declareWar(s, 0, 1);
   assert.ok('win' in b && b.win);

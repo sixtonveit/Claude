@@ -2,7 +2,7 @@ import {
   GameState, House, Battle, EventCard, newGame, endYear, human, fmt, titleOf, rulerName, HOUSE_DEFS, BUILD_DEFS, BType,
   buyKorn, sellKorn, buyLand, sellLand, kornCost, kornSellPrice, maxBuyHa, maxSellHa, freeLand, canBuild, build, count, buildLimit,
   recruit, dismiss, hire, fire, strength, maxSoldiers, declareWar, allied, acceptOffer, marryChild, offerHouseName,
-  titleReqs, mood, moodLabel, income, capacity, kornBuyPrice, popForecast, TITLE_REQ, JUSTICE, TITLES_M, TITLES_F, RECRUIT_COST, MERC_COST, MERC_UPKEEP, SOLDIER_UPKEEP, Result, tilesOf,
+  titleReqs, warFrom, mood, moodLabel, income, capacity, kornBuyPrice, popForecast, TITLE_REQ, JUSTICE, TITLES_M, TITLES_F, RECRUIT_COST, MERC_COST, MERC_UPKEEP, SOLDIER_UPKEEP, Result, tilesOf,
 } from './rules';
 import * as art from './art';
 import { ico } from './icons';
@@ -487,13 +487,13 @@ function sheetHtml(name: string, arg: unknown): string {
           <div class="preview" id="milPrev">${milPreview()}</div>
           <button class="btn wide ${m.mode === 'remove' ? 'gold' : ''}" id="milGo" data-act="mgo" ${m.amt ? '' : 'disabled'}>${milGoLabel()}</button>
         </div>
-        <div class="panel"><h3 class="ih">${ico('militaer')}Feldzug ${me.warred ? '<small class="lim">dieses Jahr schon geführt</small>' : ''}</h3>
+        <div class="panel"><h3 class="ih">${ico('militaer')}Feldzug ${me.warred ? '<small class="lim">dieses Jahr schon geführt</small>' : s.year < warFrom(s) ? `<small class="lim">erst ab ${warFrom(s)} möglich</small>` : ''}</h3>
           <div class="targets">${others.map(h => {
             const al = allied(s, 0, h.idx), est = Math.max(1, Math.round(strength(s, h, true) / 10) * 10), ratio = atk / est;
             const [cl, lab] = ratio > 1.3 ? ['good', 'Gute Chancen'] : ratio > 0.8 ? ['even', 'Ausgeglichen'] : ['bad', 'Aussichtslos'];
             const btn = al ? '<span class="tag">verbündet</span>' : confirmWar === h.idx
               ? `<button class="btn small red" data-act="war" data-n="${h.idx}">Wirklich angreifen!</button>`
-              : `<button class="btn small" data-act="askWar" data-n="${h.idx}" ${me.warred || me.soldiers + me.mercs < 10 ? 'disabled' : ''}>Angreifen</button>`;
+              : `<button class="btn small" data-act="askWar" data-n="${h.idx}" ${me.warred || me.soldiers + me.mercs < 10 || s.year < warFrom(s) ? 'disabled' : ''}>Angreifen</button>`;
             return `<div class="target" style="--tc:${h.def.color}"><i></i><div><b>${esc(h.def.name)}</b><small>${titleOf(h)} · ${fmt(h.ha)} ha</small>
               ${al ? '' : `<div class="vs"><span style="flex:${atk}"></span><span style="flex:${est}"></span></div><small class="chance ${cl}">${lab} · du ${fmt(atk)} gegen etwa ${fmt(est)}</small>`}</div>${btn}</div>`;
           }).join('')}</div>

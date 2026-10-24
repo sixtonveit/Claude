@@ -425,10 +425,13 @@ function transferTiles(s: GameState, from: number, to: number, n: number): numbe
   return moved;
 }
 
+export const warFrom = (s: GameState) => s.startYear + 2;
+
 export function declareWar(s: GameState, ai: number, di: number): Battle | Result {
   const a = s.houses[ai], d = s.houses[di];
   if (!d.alive || ai === di) return fail('Kein gültiges Ziel.');
   if (allied(s, ai, di)) return fail('Mit diesem Haus bist du verschwägert.');
+  if (s.year < warFrom(s)) return fail(`Feldzüge sind erst ab ${warFrom(s)} erlaubt.`);
   if (a.warred) return fail('Nur ein Feldzug pro Jahr.');
   if (a.soldiers + a.mercs < 10) return fail('Du brauchst mindestens 10 Mann.');
   a.warred = true;
