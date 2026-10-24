@@ -28,6 +28,8 @@ section:first-of-type{border-top:0}
 .art{background:linear-gradient(180deg,#7fd0e8 0%,#c5ecf2 70%,#e9f7ef 100%);border-radius:22px;overflow:hidden;display:block;width:100%;max-width:100%;height:auto}
 .art.dusk{background:linear-gradient(180deg,#2e3a63 0%,#5a5b8c 60%,#c58b8b 100%)}
 .art.plain{background:var(--panel)}
+.art.wed{background:linear-gradient(180deg,#f6c7c9 0%,#fbe3d3 60%,#fff3e3 100%)}
+.sty{display:block;font:600 18px/1.2 var(--display);color:var(--ink);margin-bottom:4px}
 .grid{display:grid;gap:16px}
 .g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 .g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
@@ -139,8 +141,18 @@ footer a{color:var(--cyan)}
   <div class="grid g3">
     <div class="card"><span class="tag new">Neu</span><h3>Sichtbare Karte</h3><p>Land, Felder und Gebäude sind Kacheln. Grenzen zu Nachbarn sind farbig wie bei Polytopia. Krieg verschiebt Kacheln sichtbar.</p></div>
     <div class="card"><span class="tag new">Neu</span><h3>Fürstenhäuser</h3><p>Bis zu 8 Häuser mit eigener Farbe und einem Vorteil, ähnlich den Stämmen in Polytopia (z. B. Tirol: Bergbau, Holstein: Handel über See).</p></div>
-    <div class="card"><span class="tag new">Neu</span><h3>KI-Gegner</h3><p>Das Original lebt vom Hot-Seat. Für Solospiele kommen computergesteuerte Fürsten dazu, mit drei Schwierigkeitsstufen.</p></div>
+    <div class="card"><span class="tag new">Neu</span><h3>KI-Gegner</h3><p>Du spielst gegen computergesteuerte Fürsten mit drei Schwierigkeitsstufen. Sie handeln, bauen, heiraten und führen Krieg nach denselben Regeln wie du.</p></div>
   </div>
+
+  <h3>Heirat &amp; Dynastie</h3>
+  <svg class="art wed" data-art="wedding" viewBox="0 0 900 300" role="img" aria-label="Hochzeit vor dem Dom: Fürst aus Bayern und Braut aus Sachsen, daneben eine Truhe mit der Mitgift"></svg>
+  <div class="grid g2">
+    <div class="card"><span class="tag new">Neu</span><h3>Heiratsmarkt</h3><p>Jedes Jahr bieten die Computer-Fürsten Söhne und Töchter an. Eine Heirat bringt Mitgift in Talern und Land. Das Land wechselt sichtbar als Kacheln den Besitzer. Je höher dein Titel, desto bessere Partien bekommst du.</p></div>
+    <div class="card"><span class="tag new">Neu</span><h3>Bündnis durch Heirat</h3><p>Verschwägerte Häuser greifen sich nicht an. Ein Computer-Fürst bricht das Bündnis nur, wenn dein Ansehen tief fällt, etwa durch Hunger oder harte Justiz.</p></div>
+    <div class="card"><span class="tag new">Neu</span><h3>Kinder &amp; Erbe</h3><p>Aus der Ehe werden Kinder geboren. Dein Fürst altert und stirbt irgendwann. Dann erbt das älteste Kind Land und Titel. Ohne Erben endet dein Spiel.</p></div>
+    <div class="card"><span class="tag new">Neu</span><h3>Heiratspolitik</h3><p>Eigene Kinder kannst du später selbst verheiraten, um Mitgift zu kassieren oder einen gefährlichen Nachbarn ruhigzustellen.</p></div>
+  </div>
+  <p class="note">Ob schon die Linel-Fassung von 1991 Heiraten hatte, konnte ich in meinen Quellen nicht belegen. Das Fan-Remake „PC Kaiser“ zeigt Geburten, Todesfälle und Dynastien. Im Nachbau ist die Heirat in jedem Fall fester Bestandteil.</p>
 </section>
 
 <section>
@@ -153,6 +165,14 @@ footer a{color:var(--cyan)}
     <li><b>Barock statt Steinzeit:</b> Dreispitze, Musketen, Mansarddächer, Kuppeln und Zwiebeltürme ersetzen Polytopias Speere und Hütten.</li>
     <li><b>Gold für Macht:</b> Gold-Akzente gibt es nur bei Titeln, Palast, Dom und Krone. Damit liest man den Fortschritt sofort.</li>
   </ul>
+  <h3>Drei Stilrichtungen zur Auswahl</h3>
+  <p>Dieselbe Szene in drei Varianten. Formen und Figuren bleiben gleich, es ändern sich Farben, Licht und Stimmung.</p>
+  <div class="grid g3">
+    <figure class="fig card"><svg class="art" data-art="style-a" viewBox="0 0 420 300" role="img" aria-label="Stil A: kräftige Polytopia-Farben"></svg><figcaption><b class="sty">A · Polytopia pur</b>Kräftige, satte Farben, klare Hausfarben. Am nächsten am Vorbild und auf dem Handy am besten lesbar.</figcaption></figure>
+    <figure class="fig card"><svg class="art" data-art="style-b" viewBox="0 0 420 300" role="img" aria-label="Stil B: gedeckte historische Farben auf Pergament"></svg><figcaption><b class="sty">B · Alte Landkarte</b>Gedeckte Erdtöne, rote Ziegeldächer, Pergament-Hintergrund. Passt am besten zum 18. Jahrhundert, Hausfarben stehen weniger hervor.</figcaption></figure>
+    <figure class="fig card"><svg class="art" data-art="style-c" viewBox="0 0 420 300" role="img" aria-label="Stil C: weiche Pastellfarben wie ein Diorama"></svg><figcaption><b class="sty">C · Pastell-Diorama</b>Weiche Pastelltöne und warmes Abendlicht, wie ein Modell auf dem Tisch. Gemütlich und eigenständig, weniger kriegerisch.</figcaption></figure>
+  </div>
+
   <h3>Fürstenhäuser &amp; Farben</h3>
   <div class="swatches" data-art="swatches"></div>
 </section>
@@ -247,12 +267,12 @@ footer a{color:var(--cyan)}
 
 <section>
   <span class="eyebrow">6 · Offen</span>
-  <h2>Was ich von dir brauche, bevor ich loslege</h2>
+  <h2>Entschieden und offen</h2>
   <div class="q grid g2">
-    <div class="card"><b>Wie nah am Original?</b><p>Regeln 1:1 wie 1991 (Zahlen, Titel, Formeln), oder modernisiert mit Karte, Fürstenhäusern und KI wie oben?</p></div>
-    <div class="card"><b>Mehrspieler</b><p>Nur Hot-Seat an einem Gerät wie im Original, oder auch gegen Computer-Fürsten?</p></div>
-    <div class="card"><b>Krieg</b><p>Schlacht automatisch mit Animation, oder eine kleine taktische Schlacht auf Kacheln wie bei Polytopia?</p></div>
-    <div class="card"><b>Plattform &amp; Stil</b><p>Browser passt? Gefallen dir die Artworks so, oder soll es näher an Polytopia (bunter, runder) oder historischer (gedecktere Farben) werden?</p></div>
+    <div class="card"><span class="tag src">Entschieden</span><b>Modernisiert</b><p>Karte, Fürstenhäuser, Heirat &amp; Dynastie. Die Wirtschaftsregeln bleiben nah am Original.</p></div>
+    <div class="card"><span class="tag src">Entschieden</span><b>Gegen den Computer</b><p>Du spielst allein gegen Computer-Fürsten.</p></div>
+    <div class="card"><span class="tag src">Entschieden</span><b>Krieg automatisch</b><p>Die Schlacht wird berechnet und als kurze Animation an der Grenze gezeigt.</p></div>
+    <div class="card"><span class="tag new">Offen</span><b>Stil A, B oder C?</b><p>Such dir eine der drei Stilrichtungen aus, gern auch gemischt (z. B. Farben von A, Licht von C).</p></div>
   </div>
 </section>
 
@@ -386,9 +406,61 @@ function person(x,y,k,c,role){const cl=sh(c,.12),cd=sh(c,-.22),skin='#f2c6a0',sk
 function rat(x,y,k){return `<g transform="translate(${x},${y}) scale(${k})"><path d="M-12 -2 q-14 -2 -20 -12" stroke="#e7a3a8" stroke-width="2" fill="none"/>`+poly([[-13,0],[-6,-10],[0,-11],[0,0]],'#8d96a3')+poly([[0,-11],[8,-9],[15,-2],[16,0],[0,0]],'#6f7884')+`<circle cx="6" cy="-11" r="3.5" fill="#e7a3a8"/><circle cx="11" cy="-6" r="1.4" fill="#22252e"/></g>`;}
 function shadow(x,y,w){return `<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${w}" ry="${w*.35}" fill="#000" opacity=".15"/>`;}
 
+function bride(x,y,k,c){const cl=sh(c,.15),cd=sh(c,-.2),skin='#f2c6a0',skd='#dfa982',dk='#2b2f3a',hair='#8a5a32';
+  let g=poly([[-3,-60],[14,-58],[24,0],[2,0]],'#ffffff',' opacity=".75"');
+  g+=poly([[-10,-36],[0,-36],[0,0],[-19,0]],cl)+poly([[0,-36],[10,-36],[19,0],[0,0]],cd)+rect(-10,-24,20,3,'#f4efe1');
+  g+=rect(-14,-34,4,14,cl)+rect(10,-34,4,14,cd)+rect(-14,-20,4,4,skin)+rect(10,-20,4,4,skd);
+  g+=rect(-12,-58,4,22,hair)+rect(8,-58,4,22,sh(hair,-.2));
+  g+=rect(-10,-56,10,20,skin)+rect(0,-56,10,20,skd)+rect(-6,-49,3,4,dk)+rect(3,-49,3,4,dk);
+  g+=rect(-11,-61,22,7,hair)+poly([[-7,-61],[-4,-67],[-1,-61]],'#f2b53b')+poly([[1,-61],[4,-67],[7,-61]],'#d99a22');
+  g+=`<circle cx="-14" cy="-20" r="5" fill="#f4a3c0"/><circle cx="-11" cy="-23" r="3" fill="#fff"/>`;
+  return `<g transform="translate(${f1(x)},${f1(y)}) scale(${k})">${g}</g>`;}
+function heart(x,y,k,c){return `<path transform="translate(${x},${y}) scale(${k})" d="M0 6 L-8 -2 A4.5 4.5 0 0 1 0 -8 A4.5 4.5 0 0 1 8 -2 Z" fill="${c}"/>`;}
+function chest(o,u,v){const [x,y]=P(o,u,v,22);let s=box(o,u-.2,v-.13,u+.2,v+.13,0,18,'#8a5a32')+box(o,u-.2,v-.13,u+.2,v+.13,18,22,'#f2b53b');
+  for(const [dx,dy] of[[-14,-8],[0,-12],[12,-6],[-4,-2],[8,-14]])s+=`<circle cx="${f1(x+dx*o.s)}" cy="${f1(y+dy*o.s)}" r="${f1(5*o.s)}" fill="#f2b53b" stroke="#cf8f1f" stroke-width="${o.s}"/>`;return s;}
+// Farb-Umrechnung für die Stil-Varianten
+function toHsl(hex){let n=parseInt(hex.slice(1),16),r=(n>>16)/255,g=((n>>8)&255)/255,b=(n&255)/255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2;let h=0,s=0;
+  if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h/=6;}return [h,s,l];}
+function toHex(h,s,l){const f=n=>{const k=(n+h*12)%12,a=s*Math.min(l,1-l);return Math.round(255*(l-a*Math.max(-1,Math.min(k-3,9-k,1))));};return '#'+((1<<24)|(f(0)<<16)|(f(8)<<8)|f(4)).toString(16).slice(1);}
+function mix(a,b,t){const x=parseInt(a.slice(1),16),y=parseInt(b.slice(1),16);const c=i=>Math.round(((x>>i)&255)*(1-t)+((y>>i)&255)*t);return '#'+((1<<24)|(c(16)<<16)|(c(8)<<8)|c(0)).toString(16).slice(1);}
+const STYLES={
+  a:{bg:'linear-gradient(180deg,#5ec8ee 0%,#b6ecf4 75%,#e6fbef 100%)',house:'#2f6fe0',fn:h=>{const [H,S,L]=toHsl(h);return toHex(H,Math.min(1,S*1.2),L);}},
+  b:{bg:'linear-gradient(180deg,#e9dcbd 0%,#dccaa2 100%)',house:'#a3402f',fn:h=>{const [H,S,L]=toHsl(h);return mix(toHex(H,S*.42,L*.92),'#7a5a36',.16);}},
+  c:{bg:'linear-gradient(180deg,#c9b6e4 0%,#f3c7c0 60%,#ffe2c4 100%)',house:'#6f8ff0',fn:h=>{const [H,S,L]=toHsl(h);return mix(toHex((H+0.015)%1,S*.75,L+(1-L)*.3),'#ffb38a',.08);}}};
+function styleScene(key,el){const st=STYLES[key],o={x:210,y:152,s:.82},c=st.house;let s='';
+  if(key==='a')s+=`<circle cx="360" cy="48" r="24" fill="#fff6c9"/>`;
+  if(key==='c')s+=`<circle cx="355" cy="60" r="30" fill="#ffd9a8" opacity=".9"/>`;
+  const map=['tgggm','tggmm','ffggg','ffggs','gggsw'];
+  for(let d=0;d<9;d++)for(let i=0;i<5;i++){const j=d-i;if(j<0||j>4)continue;s+=terrainTile(o,map[j][i],i-2,j-2);}
+  const objs=[];const add=(i,j,f)=>objs.push([i+j,f]);const U=i=>i-2;
+  add(0,0,()=>tree(o,U(0),U(0))+pine(o,U(0)+.25,U(0)+.2,.8));add(0,1,()=>tree(o,U(0),U(1),.9));
+  add(4,0,()=>mountain(o,U(4),U(0),.9));add(3,1,()=>mountain(o,U(3),U(1),.75));add(4,1,()=>mountain(o,U(4),U(1),.65));
+  add(2,1,()=>castle(o,U(2),U(1),c));add(3,2,()=>village(o,U(3),U(2),c));add(0,4,()=>mill(o,U(0),U(4),c));add(3,3,()=>granary(o,U(3),U(3),c));
+  add(1,2,()=>sheaf(o,U(1),U(2))+sheaf(o,U(1)+.25,U(2)-.2,.8));
+  add(1,3,()=>person(...P(o,U(1)+.2,U(3),0),.85,c,'farmer'));
+  add(2,3,()=>person(...P(o,U(2),U(3)+.1,0),.85,c,'soldier'));
+  add(2,4,()=>person(...P(o,U(2)+.1,U(4),0),1.1,c,'kaiser'));
+  objs.sort((a,b)=>a[0]-b[0]).forEach(x=>s+=x[1]());
+  if(key==='b')s+=`<rect x="6" y="6" width="408" height="288" rx="14" fill="none" stroke="#7a5a36" stroke-width="2" stroke-dasharray="1 0"/><text x="22" y="34" font-family="Georgia,'Times New Roman',serif" font-style="italic" font-size="18" fill="#6b4a2e">Anno 1734</text>`;
+  s=s.replace(/#[0-9a-fA-F]{6}\b/g,m=>st.fn(m.toLowerCase()));
+  if(key==='c')s+=`<rect width="420" height="300" fill="#ff9d6b" opacity=".08"/>`;
+  el.style.background=st.bg;el.innerHTML=s;}
+
 const HOUSES=[['Bayern','#3b7dd8','Ausgeglichen'],['Brandenburg','#d9483b','Militär'],['Sachsen','#46a85a','Bergbau'],['Württemberg','#f0b429','Landwirtschaft'],['Hessen','#8e5bd6','Justiz'],['Holstein','#2bb3b1','Seehandel'],['Tirol','#ef7d32','Berge'],['Pfalz','#d65aa0','Wein']];
 
 function render(name,el){
+  if(name.startsWith('style-'))return styleScene(name.slice(6),el);
+  if(name==='wedding'){let s=`<rect x="0" y="236" width="900" height="64" fill="#8fd16a"/><rect x="0" y="232" width="900" height="8" fill="#7cc04a"/>`;
+    const od={x:190,y:205,s:1.25};s+=tile(od,0,0,'#7cc04a')+dom(od,0,0,'#3b7dd8');
+    s+=`<g><line x1="380" y1="236" x2="380" y2="120" stroke="#7a4f2e" stroke-width="4"/><line x1="700" y1="236" x2="700" y2="120" stroke="#7a4f2e" stroke-width="4"/><path d="M380 124 Q540 168 700 124" fill="none" stroke="#7a4f2e" stroke-width="2"/>`;
+    for(let k=0;k<9;k++){const x=396+k*35,y=124+Math.sin((k+.5)/9*Math.PI)*38;s+=poly([[x-11,y],[x+11,y+2],[x,y+24]],k%2?'#46a85a':'#3b7dd8');}
+    s+=`</g>`+`<ellipse cx="520" cy="240" rx="80" ry="10" fill="#000" opacity=".12"/>`;
+    s+=person(470,240,2.6,'#3b7dd8','noble')+bride(585,240,2.6,'#46a85a');
+    s+=heart(528,40,2.2,'#e9566a')+heart(490,30,1.3,'#f48aa0')+heart(568,32,1.5,'#f48aa0');
+    s+=chest({x:790,y:226,s:1.6},0,0);
+    s+=`<text x="790" y="272" text-anchor="middle" font-family="Fredoka,system-ui" font-weight="600" font-size="16" fill="#26402a">Mitgift</text><text x="790" y="291" text-anchor="middle" font-family="Nunito,system-ui" font-weight="700" font-size="14" fill="#26402a">2.000 ha + 8.000 Taler</text>`;
+    s+=`<text x="528" y="282" text-anchor="middle" font-family="Fredoka,system-ui" font-weight="600" font-size="17" fill="#26402a">Bayern ♥ Sachsen</text>`;
+    el.innerHTML=s;return;}
   if(name==='hero'){const o={x:450,y:262,s:1.05};let s='';
     const map=['wwwwwww','wttgmmw','wtggGmw','wffgggw','wffgggw','wgxfggw','wwwwwww'];
     s+=`<circle cx="790" cy="70" r="40" fill="#fff6c9" opacity=".9"/>`;
