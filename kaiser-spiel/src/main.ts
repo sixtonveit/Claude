@@ -2,7 +2,7 @@ import {
   GameState, House, Battle, EventCard, newGame, endYear, human, fmt, titleOf, rulerName, HOUSE_DEFS, BUILD_DEFS, BType,
   buyKorn, sellKorn, buyLand, sellLand, kornCost, kornSellPrice, maxBuyHa, maxSellHa, freeLand, canBuild, build, count, buildLimit,
   recruit, dismiss, hire, fire, strength, maxSoldiers, declareWar, allied, acceptOffer, marryChild, offerHouseName,
-  titleReqs, mood, moodLabel, income, capacity, kornBuyPrice, JUSTICE, TITLES_M, TITLES_F, RECRUIT_COST, MERC_COST, MERC_UPKEEP, SOLDIER_UPKEEP, Result, tilesOf,
+  titleReqs, mood, moodLabel, income, capacity, kornBuyPrice, popForecast, TITLE_REQ, JUSTICE, TITLES_M, TITLES_F, RECRUIT_COST, MERC_COST, MERC_UPKEEP, SOLDIER_UPKEEP, Result, tilesOf,
 } from './rules';
 import * as art from './art';
 import { ico } from './icons';
@@ -313,6 +313,7 @@ function res(r: Result | Battle) { if ('ok' in r && !r.ok && r.msg) toast(r.msg)
 
 function openSheet(name: string, arg: unknown = null) {
   if (name === 'markt' && sheet !== 'markt') { trade.korn.amt = 0; trade.land.amt = 0; }
+  if (name === 'militaer' && sheet !== 'militaer') mil.amt = 0;
   sheet = name; sheetArg = arg; confirmWar = -1;
   if (popKind) showPop(null);
   const back = document.getElementById('sheetBack')!;
@@ -326,6 +327,40 @@ function closeSheet() {
   sheet = null; sheetArg = null;
   const back = document.getElementById('sheetBack'); if (back) back.hidden = true;
   if (was === 'report' && S?.over) renderEnd();
+}
+
+// ---------- Volk & Militär: Vorschau ----------
+function volkPreview(): string {
+  const s = S!, me = human(s), f = popForecast(s, me), inc = income(s, me);
+  const sg = (n: number) => (n >= 0 ? '+' : '−') + fmt(Math.abs(n));
+  const left = me.korn - Math.min(me.ration, me.korn);
+  return `<div>${ico('volk')}<span>${fmt(me.pop)} <i>→</i> <b>${fmt(Math.max(100, me.pop + f.delta))}</b> Einwohner <em class="${f.delta >= 0 ? 'pos' : 'neg'}">(${sg(f.delta)})</em></span></div>
+    <small class="breakdown">Geburten +${fmt(f.born)} · Zuzug +${fmt(f.immig)} · Tote −${fmt(f.died)}${f.starved ? ` · <span class="neg">Hunger −${fmt(f.starved)}</span>` : ''}${f.emig ? ` · Abwanderung −${fmt(f.emig)}` : ''}</small>
+    <div>${ico('ansehen')}<span>Ansehen ${Math.round(me.rep)} <i>→</i> <b>${Math.round(Math.max(0, Math.min(100, me.rep + f.repDelta)))}</b></span></div>
+    <div>${ico('taler')}<span>Steuern <b>+${fmt(inc.tax)}</b> · Strafgelder <b>+${fmt(inc.fines)}</b> Taler</span></div>
+    <div>${ico('korn')}<span>Korn übrig: <b>${fmt(left)}</b> Scheffel</span></div>`;
+}
+const mil: { kind: 'soldier' | 'merc'; mode: 'add' | 'remove'; amt: number } = { kind: 'soldier', mode: 'add', amt: 0 };
+const r10 = (n: number) => Math.max(0, Math.floor(n / 10) * 10);
+function milMax(): number {
+  const me = human(S!);
+  if (mil.kind === 'soldier') return mil.mode === 'add' ? r10(Math.min(maxSoldiers(me) - me.soldiers, me.taler / RECRUIT_COST)) : me.soldiers;
+  return mil.mode === 'add' ? r10(me.taler / MERC_COST) : me.mercs;
+}
+function milPreview(): string {
+  const s = S!, me = human(s), merc = mil.kind === 'merc', add = mil.mode === 'add', n = mil.amt * (add ? 1 : -1);
+  const cost = add ? mil.amt * (merc ? MERC_COST : RECRUIT_COST) : 0;
+  const atk = strength(s, me, false), atk2 = atk + n * (merc ? 2 : 1) * (me.def.bonus === 'military' ? 1.2 : 1);
+  const up = me.soldiers * SOLDIER_UPKEEP + me.mercs * MERC_UPKEEP, up2 = up + n * (merc ? MERC_UPKEEP : SOLDIER_UPKEEP);
+  return `${cost ? `<div>${ico('taler')}<span>${fmt(me.taler)} <i>→</i> <b>${fmt(me.taler - cost)}</b> Taler</span></div>` : ''}
+    <div>${ico('militaer')}<span>Angriff ${fmt(atk)} <i>→</i> <b>${fmt(atk2)}</b></span></div>
+    <div>${ico('taler')}<span>Sold ${fmt(up)} <i>→</i> <b>${fmt(up2)}</b> Taler im Jahr</span></div>
+    ${merc ? '' : `<div>${ico('volk')}<span>Volk ${fmt(me.pop)} <i>→</i> <b>${fmt(me.pop - n)}</b></span></div>`}`;
+}
+function milGoLabel(): string {
+  const merc = mil.kind === 'merc', who = merc ? 'Söldner' : 'Musketiere';
+  if (!mil.amt) return 'Anzahl wählen';
+  return mil.mode === 'add' ? `${fmt(mil.amt)} ${who} anwerben · −${fmt(mil.amt * (merc ? MERC_COST : RECRUIT_COST))} T` : `${fmt(mil.amt)} ${who} entlassen`;
 }
 
 // ---------- Dialoge ----------
@@ -370,47 +405,99 @@ function sheetHtml(name: string, arg: unknown): string {
     case 'markt':
       return `<h2 id="sheetTitle">Markt</h2>${tradePanel('korn')}${tradePanel('land')}`;
     case 'volk': {
-      const m = mood(me), inc = income(s, me);
+      const need = me.pop, rat = Math.min(me.ration, me.korn);
+      const quick: [string, number][] = [['Knapp 80 %', Math.ceil(need * .8 / 100) * 100], ['Bedarf', Math.ceil(need / 100) * 100], ['Großzügig 120 %', Math.ceil(need * 1.2 / 100) * 100], ['Alles', me.korn]];
+      const tq: [string, number][] = [['Niedrig 15 %', 15], ['Normal 20 %', 20], ['Hoch 25 %', 25], ['Sehr hoch 35 %', 35]];
+      const jt = ['', 'Keine Strafgelder, das Volk ist zufrieden.', 'Kleine Strafgelder, niemand wandert ab.', 'Mehr Strafgelder, aber einige fliehen.', 'Viel Geld, doch viele fliehen und murren.'];
+      const old = me.justice;
+      const jinfo = [1, 2, 3, 4].map(n => { me.justice = n; const f = income(s, me).fines, e = popForecast(s, me).emig; return { f, e }; });
+      me.justice = old;
+      const base = jinfo[1].e;
       return `<h2 id="sheetTitle">Volk</h2>
-        <div class="panel"><div class="row"><h3><label for="ration">Korn verteilen</label></h3><span class="mood m${moodLabel(m)}" id="moodPill">${moodLabel(m)}</span></div>
-          <input type="range" id="ration" min="0" max="${me.korn}" step="50" value="${Math.min(me.ration, me.korn)}">
-          <p id="rationTxt">${fmt(me.ration)} von ${fmt(me.korn)} Scheffel · Bedarf ${fmt(me.pop)}</p>
-          <p class="hint">Weniger als der Bedarf: Hunger und Abwanderung. Mehr: Zuzug, Geburten und Ansehen.</p></div>
-        <div class="panel"><div class="row"><h3><label for="tax">Steuern</label></h3><b id="taxTxt">${me.tax} %</b></div>
-          <input type="range" id="tax" min="0" max="50" step="1" value="${me.tax}">
-          <p id="incTxt">Erwartete Steuern: ${fmt(inc.tax)} Taler · Strafgelder: ${fmt(inc.fines)} Taler</p>
-          <p class="hint">Über 25 % wandern Leute ab und das Ansehen sinkt.</p></div>
-        <div class="panel"><h3>Justiz</h3><div class="seg">${[1, 2, 3, 4].map(n => `<button data-act="justice" data-n="${n}" class="${me.justice === n ? 'on' : ''}">${JUSTICE[n]}</button>`).join('')}</div>
-          <p class="hint">Strenge Justiz bringt Strafgelder, vertreibt aber Menschen.</p></div>`;
+        <div class="panel trade">
+          <div class="row"><h3 class="ih">${ico('korn')}<label for="ration">Korn verteilen</label></h3><span class="mood m${moodLabel(mood(me))}" id="moodPill">${moodLabel(mood(me))}</span></div>
+          <div class="meter"><i id="rationBar" style="width:${Math.min(100, rat / Math.max(1, need) * 50)}%"></i><s></s></div>
+          <p class="mtext">Bedarf <b>${fmt(need)}</b> Scheffel · Vorrat <b>${fmt(me.korn)}</b> · Strich = Bedarf</p>
+          <div class="stepper"><button class="round" data-act="vstep" data-n="-1" aria-label="Weniger" ${rat <= 0 ? 'disabled' : ''}>−</button><output id="rationOut">${fmt(rat)} Scheffel</output><button class="round" data-act="vstep" data-n="1" aria-label="Mehr" ${rat >= me.korn ? 'disabled' : ''}>+</button></div>
+          <input type="range" id="ration" min="0" max="${me.korn}" step="50" value="${rat}" aria-label="Korn verteilen">
+          <div class="quick">${quick.map(([l, n]) => `<button data-act="vset" data-n="${Math.min(n, me.korn)}" ${n > me.korn && l !== 'Alles' ? 'disabled' : ''}>${l}</button>`).join('')}</div>
+        </div>
+        <div class="panel trade">
+          <div class="row"><h3 class="ih">${ico('taler')}<label for="tax">Steuern</label></h3><b class="big" id="taxOut">${me.tax} %</b></div>
+          <div class="stepper"><button class="round" data-act="taxstep" data-n="-1" aria-label="Weniger" ${me.tax <= 0 ? 'disabled' : ''}>−</button><input type="range" id="tax" min="0" max="50" step="1" value="${me.tax}" aria-label="Steuersatz"><button class="round" data-act="taxstep" data-n="1" aria-label="Mehr" ${me.tax >= 50 ? 'disabled' : ''}>+</button></div>
+          <div class="quick">${tq.map(([l, n]) => `<button data-act="taxset" data-n="${n}" class="${me.tax === n ? 'on' : ''}">${l}</button>`).join('')}</div>
+          <p class="mtext">Bis 25 % bleibt das Volk ruhig. Darüber wandern Leute ab und dein Ansehen sinkt.</p>
+        </div>
+        <div class="panel"><h3 class="ih">${ico('reich')}Justiz</h3>
+          <div class="opts">${[1, 2, 3, 4].map(n => `<button class="opt ${me.justice === n ? 'on' : ''}" data-act="justice" data-n="${n}"><b>${JUSTICE[n]}</b><span>${jt[n]}</span><small>${jinfo[n - 1].f ? `+${fmt(jinfo[n - 1].f)} T` : '±0 T'}${jinfo[n - 1].e > base ? ` · −${fmt(jinfo[n - 1].e - base)} Einw.` : ''}</small></button>`).join('')}</div>
+        </div>
+        <div class="panel"><h3>Prognose fürs Jahresende</h3><div class="preview" id="volkPrev">${volkPreview()}</div></div>`;
     }
     case 'bauen': {
-      const w = (b: BType) => { const o: art.O = { x: 60, y: 62, s: .62 }; return `<svg viewBox="0 0 120 90" aria-hidden="true">${art.tile(o, 0, 0, '#74c043')}${art.buildingArt(o, 0, 0, b, c, 4)}</svg>`; };
-      return `<h2 id="sheetTitle">Bauen</h2><div class="builds">${BUILD_DEFS.map(d => {
-        const can = canBuild(s, me, d.type), have = count(s, 0, d.type), lim = buildLimit(s, me, d.type);
-        return `<div class="bcard">${w(d.type)}<div><h3>${d.name} <small>${have}/${d.sections ? 4 : lim}</small></h3><p>${d.text}</p>
-          <button class="btn small" data-act="build" data-n="${d.type}" ${can.ok ? '' : 'disabled'}>${d.sections && have ? 'Abschnitt bauen' : 'Bauen'} · ${fmt(d.cost)} T</button>${can.ok ? '' : `<small class="why">${esc(can.msg!)}</small>`}</div></div>`;
-      }).join('')}</div>`;
+      const next = TITLE_REQ[me.titleIdx + 1] as Record<string, number> | null;
+      const effects: Record<string, [string, string][]> = {
+        markt: [['taler', '+12 % Steuern'], ['taler', '+300 T im Jahr'], ['volk', '+5 % Platz']],
+        muehle: [['korn', '+8 % Ernte'], ['taler', '+250 T im Jahr']],
+        speicher: [['korn', 'Verderb 12 % → 5 %'], ['korn', 'Ratten fressen ⅓']],
+        burg: [['militaer', `Verteidigung ×${me.def.bonus === 'mountains' ? 2 : 1.5}`], ['ansehen', 'mehr Ansehen']],
+        palast: [['reich', 'Pflicht für Kurfürst, König, Kaiser']],
+        dom: [['reich', 'Pflicht für König, Kaiser'], ['volk', 'Pest halb so schlimm']],
+      };
+      const thumb = (b: BType) => { const o: art.O = { x: 60, y: 62, s: .62 }; return `<svg viewBox="0 0 120 90" aria-hidden="true">${art.tile(o, 0, 0, '#74c043')}${art.buildingArt(o, 0, 0, b, c, 4)}</svg>`; };
+      return `<h2 id="sheetTitle">Bauen</h2>
+        <div class="buildtop"><span class="chip static">${ico('taler')}<b>${fmt(me.taler)}</b></span><span class="chip static">${ico('land')}<b>${fmt(me.ha)} ha</b></span>${next ? `<span class="tag need">Gold markiert: nötig für ${titleOf(me, me.titleIdx + 1)}</span>` : ''}</div>
+        <div class="builds">${BUILD_DEFS.map(d => {
+          const can = canBuild(s, me, d.type), have = count(s, 0, d.type), lim = d.sections ? 4 : buildLimit(s, me, d.type);
+          const needed = !!next && (next[d.type] || 0) > have;
+          const done = !!d.sections && have >= 4;
+          const landLock = me.ha < d.minHa;
+          const pips = d.sections ? `<div class="pips">${[0, 1, 2, 3].map(k => `<i class="${k < have ? 'on' : ''}"></i>`).join('')}<small>${have}/4 Abschnitte</small></div>` : '';
+          const lock = landLock ? `<div class="lock"><div class="meter"><i style="width:${me.ha / d.minHa * 100}%"></i></div><small>Ab ${fmt(d.minHa)} ha · dir fehlen ${fmt(d.minHa - me.ha)} ha</small></div>` : '';
+          const limit = !d.sections && !landLock ? `<small class="lim">${d.type === 'speicher' ? 'Höchstens 2' : d.type === 'burg' ? 'Eine Burg' : `${d.type === 'markt' ? 'Ein Markt je 4.000 ha' : 'Eine Mühle je 5.000 ha'} · jetzt bis ${lim}`}</small>` : '';
+          const action = done ? `<span class="done">✓ Fertig</span>`
+            : `<button class="buy" data-act="build" data-n="${d.type}" ${can.ok ? '' : 'disabled'}>${ico('taler')}<b>${fmt(d.cost)}</b><span>${d.sections && have ? 'Abschnitt' : 'Bauen'}</span></button>`;
+          return `<div class="bcard ${needed ? 'needed' : ''} ${can.ok ? '' : 'off'}">${thumb(d.type)}
+            <div class="bmain"><div class="bhead"><h3>${d.name}</h3><span class="cnt">${have}/${lim || '–'}</span></div>
+              <div class="effs">${effects[d.type].map(([i, t]) => `<span>${ico(i)}${t}</span>`).join('')}</div>
+              ${pips}${lock}${limit}${!can.ok && !landLock && !done && can.msg !== 'Mehr geht mit deinem Land nicht.' ? `<small class="why">${esc(can.msg!)}</small>` : ''}</div>
+            ${action}</div>`;
+        }).join('')}</div>`;
     }
     case 'militaer': {
       const others = s.houses.filter(h => h.alive && !h.human);
-      const est = (h: House) => Math.round(strength(s, h, true) / 25) * 25;
+      const atk = strength(s, me, false), def = strength(s, me, true);
+      const upkeep = me.soldiers * SOLDIER_UPKEEP + me.mercs * MERC_UPKEEP;
+      const m = mil, max = milMax(), merc = m.kind === 'merc';
+      m.amt = Math.min(m.amt, max);
+      const quick: [string, number][] = m.mode === 'add' ? [['+10', 10], ['+50', 50], ['+100', 100], ['Höchstmenge', max]] : [['−10', 10], ['−50', 50], ['Alle', max]];
       return `<h2 id="sheetTitle">Militär</h2>
-        <div class="panel"><div class="row"><div><h3>Musketiere: ${fmt(me.soldiers)}</h3><p>Aus deinem Volk, ${RECRUIT_COST} T Werbung, ${SOLDIER_UPKEEP} T Sold im Jahr. Höchstens ${fmt(maxSoldiers(me))}.</p></div>
-          <svg class="mini" viewBox="-30 -80 60 85" aria-hidden="true">${art.person(0, 0, 1, c, 'soldier')}</svg></div>
-          <div class="btns"><button class="btn small" data-act="recruit" data-n="10">+10</button><button class="btn small" data-act="recruit" data-n="50">+50</button><button class="btn small" data-act="recruit" data-n="200">+200</button><button class="btn small ghost" data-act="dismiss" data-n="50">Entlassen 50</button></div></div>
-        <div class="panel"><div class="row"><div><h3>Söldner: ${fmt(me.mercs)}</h3><p>Doppelt so stark. ${MERC_COST} T Handgeld, ${MERC_UPKEEP} T Sold. Ohne Geld laufen sie davon.</p></div>
-          <svg class="mini" viewBox="-30 -105 60 110" aria-hidden="true">${art.person(0, 0, 1, '#ef7d32', 'merc')}</svg></div>
-          <div class="btns"><button class="btn small" data-act="hire" data-n="10">+10</button><button class="btn small" data-act="hire" data-n="50">+50</button><button class="btn small ghost" data-act="fire" data-n="50">Entlassen 50</button></div></div>
-        <div class="panel"><h3>Feldzug ${me.warred ? '<small>(dieses Jahr schon geführt)</small>' : ''}</h3>
-          <p>Deine Angriffskraft: <b>${fmt(strength(s, me, false))}</b> · Verteidigung: <b>${fmt(strength(s, me, true))}</b>${count(s, 0, 'burg') ? ' (mit Burg)' : ''}</p>
+        <div class="stats">
+          <div>${ico('militaer')}<b>${fmt(atk)}</b><small>Angriff</small></div>
+          <div>${ico('reich')}<b>${fmt(def)}</b><small>Verteidigung${count(s, 0, 'burg') ? ' mit Burg' : ''}</small></div>
+          <div>${ico('taler')}<b>${fmt(upkeep)}</b><small>Sold im Jahr</small></div>
+        </div>
+        <div class="panel trade">
+          <div class="seg full"><button data-act="mkind" data-n="soldier" class="${!merc ? 'on' : ''}">Musketiere · ${fmt(me.soldiers)}</button><button data-act="mkind" data-n="merc" class="${merc ? 'on' : ''}">Söldner · ${fmt(me.mercs)}</button></div>
+          <div class="unit"><svg viewBox="-30 ${merc ? -105 : -80} 60 ${merc ? 110 : 85}" aria-hidden="true">${art.person(0, 0, 1, merc ? '#ef7d32' : c, merc ? 'merc' : 'soldier')}</svg>
+            <p>${merc ? `Angeworbene Kämpfer, <b>doppelt so stark</b>. ${MERC_COST} T Handgeld, ${MERC_UPKEEP} T Sold im Jahr. Ist die Kasse leer, laufen sie davon.` : `Männer aus deinem Volk. ${RECRUIT_COST} T Werbung, ${SOLDIER_UPKEEP} T Sold im Jahr. Sie fehlen dann als Steuerzahler. Höchstens 15 % des Volkes (${fmt(maxSoldiers(me))}).`}</p></div>
+          <div class="seg full"><button data-act="mmode" data-n="add" class="${m.mode === 'add' ? 'on' : ''}">Anwerben</button><button data-act="mmode" data-n="remove" class="${m.mode === 'remove' ? 'on' : ''}">Entlassen</button></div>
+          <div class="stepper"><button class="round" data-act="mstep" data-n="-1" aria-label="Weniger" ${m.amt <= 0 ? 'disabled' : ''}>−</button><output id="milOut">${fmt(m.amt)} Mann</output><button class="round" data-act="mstep" data-n="1" aria-label="Mehr" ${m.amt >= max ? 'disabled' : ''}>+</button></div>
+          <input type="range" id="milRng" min="0" max="${max}" step="10" value="${m.amt}" aria-label="Anzahl" ${max ? '' : 'disabled'}>
+          <div class="quick">${quick.map(([l, n]) => `<button data-act="mset" data-n="${Math.min(n, max)}" ${max <= 0 || (n > max && !/Höchst|Alle/.test(l)) ? 'disabled' : ''}>${l}</button>`).join('')}</div>
+          <div class="preview" id="milPrev">${milPreview()}</div>
+          <button class="btn wide ${m.mode === 'remove' ? 'gold' : ''}" id="milGo" data-act="mgo" ${m.amt ? '' : 'disabled'}>${milGoLabel()}</button>
+        </div>
+        <div class="panel"><h3 class="ih">${ico('militaer')}Feldzug ${me.warred ? '<small class="lim">dieses Jahr schon geführt</small>' : ''}</h3>
           <div class="targets">${others.map(h => {
-            const al = allied(s, 0, h.idx);
+            const al = allied(s, 0, h.idx), est = Math.max(1, Math.round(strength(s, h, true) / 10) * 10), ratio = atk / est;
+            const [cl, lab] = ratio > 1.3 ? ['good', 'Gute Chancen'] : ratio > 0.8 ? ['even', 'Ausgeglichen'] : ['bad', 'Aussichtslos'];
             const btn = al ? '<span class="tag">verbündet</span>' : confirmWar === h.idx
               ? `<button class="btn small red" data-act="war" data-n="${h.idx}">Wirklich angreifen!</button>`
               : `<button class="btn small" data-act="askWar" data-n="${h.idx}" ${me.warred || me.soldiers + me.mercs < 10 ? 'disabled' : ''}>Angreifen</button>`;
-            return `<div class="target" style="--tc:${h.def.color}"><i></i><div><b>${esc(rulerName(h))}</b><small>${fmt(h.ha)} ha · Verteidigung etwa ${fmt(est(h))}</small></div>${btn}</div>`;
+            return `<div class="target" style="--tc:${h.def.color}"><i></i><div><b>${esc(h.def.name)}</b><small>${titleOf(h)} · ${fmt(h.ha)} ha</small>
+              ${al ? '' : `<div class="vs"><span style="flex:${atk}"></span><span style="flex:${est}"></span></div><small class="chance ${cl}">${lab} · du ${fmt(atk)} gegen etwa ${fmt(est)}</small>`}</div>${btn}</div>`;
           }).join('')}</div>
-          <p class="hint">Siegst du, eroberst du 10–30 % seines Landes und plünderst die Kasse. Verbündete (durch Heirat) kannst du nicht angreifen.</p></div>`;
+          <p class="hint">Siegst du, eroberst du 10–30 % seines Landes und plünderst seine Kasse. Das Glück schwankt um ±25 %. Mit verschwägerten Häusern gibt es keinen Krieg.</p></div>`;
     }
     case 'familie': {
       const r = me.ruler, sp = me.spouse;
@@ -554,11 +641,21 @@ app.addEventListener('click', e => {
       res(r); break;
     }
     case 'justice': me.justice = n; refresh(); break;
+    case 'vstep': me.ration = Math.max(0, Math.min(me.korn, Math.round(me.ration / 100) * 100 + n * 100)); refresh(); break;
+    case 'vset': me.ration = Math.min(n, me.korn); refresh(); break;
+    case 'taxstep': me.tax = Math.max(0, Math.min(50, me.tax + n)); refresh(); break;
+    case 'taxset': me.tax = n; refresh(); break;
+    case 'mkind': mil.kind = t.dataset.n as 'soldier' | 'merc'; mil.amt = 0; refresh(); break;
+    case 'mmode': mil.mode = t.dataset.n as 'add' | 'remove'; mil.amt = 0; refresh(); break;
+    case 'mstep': mil.amt = Math.max(0, Math.min(milMax(), mil.amt + n * 10)); refresh(); break;
+    case 'mset': mil.amt = n; refresh(); break;
+    case 'mgo': {
+      const amt = mil.amt, merc = mil.kind === 'merc';
+      const r = mil.mode === 'add' ? (merc ? hire(S, me, amt) : recruit(S, me, amt)) : (merc ? fire(S, me, amt) : dismiss(S, me, amt));
+      if (r.ok) { toast(`${fmt(amt)} ${merc ? 'Söldner' : 'Musketiere'} ${mil.mode === 'add' ? 'angeworben' : 'entlassen'}.`); mil.amt = 0; }
+      res(r); break;
+    }
     case 'build': { const r = build(S, me, t.dataset.n as BType); if (r.ok) toast(`${BUILD_DEFS.find(d => d.type === t.dataset.n)!.name} gebaut.`); res(r); break; }
-    case 'recruit': res(recruit(S, me, n)); break;
-    case 'dismiss': res(dismiss(S, me, n)); break;
-    case 'hire': res(hire(S, me, n)); break;
-    case 'fire': res(fire(S, me, n)); break;
     case 'askWar': confirmWar = n; document.getElementById('sheetBody')!.innerHTML = sheetHtml('militaer', null); break;
     case 'war': {
       const r = declareWar(S, 0, n);
@@ -584,17 +681,25 @@ app.addEventListener('input', e => {
     const k = el.id.slice(4) as TKind;
     trade[k].amt = Number(el.value); updateTrade(k); return;
   }
-  if (el.id === 'ration') {
-    me.ration = Number(el.value);
-    const m = mood(me), l = moodLabel(m), pill = document.getElementById('moodPill')!;
+  if (el.id === 'ration' || el.id === 'tax') {
+    if (el.id === 'ration') {
+      me.ration = Number(el.value);
+      document.getElementById('rationOut')!.textContent = `${fmt(me.ration)} Scheffel`;
+      (document.getElementById('rationBar') as HTMLElement).style.width = `${Math.min(100, me.ration / Math.max(1, me.pop) * 50)}%`;
+    } else {
+      me.tax = Number(el.value);
+      document.getElementById('taxOut')!.textContent = `${me.tax} %`;
+    }
+    const l = moodLabel(mood(me)), pill = document.getElementById('moodPill')!;
     pill.textContent = l; pill.className = `mood m${l}`;
-    document.getElementById('rationTxt')!.textContent = `${fmt(me.ration)} von ${fmt(me.korn)} Scheffel · Bedarf ${fmt(me.pop)}`;
+    document.getElementById('volkPrev')!.innerHTML = volkPreview();
   }
-  if (el.id === 'tax') {
-    me.tax = Number(el.value);
-    const inc = income(S, me);
-    document.getElementById('taxTxt')!.textContent = `${me.tax} %`;
-    document.getElementById('incTxt')!.textContent = `Erwartete Steuern: ${fmt(inc.tax)} Taler · Strafgelder: ${fmt(inc.fines)} Taler`;
+  if (el.id === 'milRng') {
+    mil.amt = Number(el.value);
+    document.getElementById('milOut')!.textContent = `${fmt(mil.amt)} Mann`;
+    document.getElementById('milPrev')!.innerHTML = milPreview();
+    const go = document.getElementById('milGo') as HTMLButtonElement;
+    go.textContent = milGoLabel(); go.disabled = !mil.amt;
   }
 });
 app.addEventListener('change', () => { if (S) save(); });

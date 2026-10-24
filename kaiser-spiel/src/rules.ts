@@ -489,8 +489,8 @@ export function marryChild(s: GameState, ci: number, hi: number): Result {
 
 // ---------- Titel ----------
 export interface Req { label: string; ok: boolean }
-export function titleReqs(s: GameState, h: House, idx: number): Req[] {
-  const T = [
+export interface TitleReq { ha: number; markt: number; muehle: number; pop: number; burg?: number; palast?: number; dom?: number; taler?: number }
+export const TITLE_REQ: (TitleReq | null)[] = [
     null,
     { ha: 12000, markt: 1, muehle: 1, pop: 2500 },
     { ha: 15000, markt: 2, muehle: 2, burg: 1, pop: 3500 },
@@ -498,7 +498,9 @@ export function titleReqs(s: GameState, h: House, idx: number): Req[] {
     { ha: 21000, markt: 4, muehle: 4, palast: 2, pop: 5500 },
     { ha: 23000, markt: 5, muehle: 4, palast: 4, dom: 2, pop: 6500, taler: 60000 },
     { ha: 25000, markt: 6, muehle: 5, palast: 4, dom: 4, pop: 7500, taler: 100000 },
-  ][idx];
+];
+export function titleReqs(s: GameState, h: House, idx: number): Req[] {
+  const T = TITLE_REQ[idx];
   if (!T) return [];
   const r: Req[] = [];
   r.push({ label: `${fmt(T.ha)} ha Land (${fmt(h.ha)})`, ok: h.ha >= T.ha });
@@ -535,23 +537,32 @@ export function income(s: GameState, h: House) {
 export const capacity = (s: GameState, h: House) => h.ha * 0.35 * (1 + 0.05 * count(s, h.idx, 'markt'));
 
 // ---------- Jahresende ----------
+// Bevölkerungsentwicklung bis Jahresende (ohne Zufall), auch für die Vorschau
+export function popForecast(s: GameState, h: House, ration = h.ration) {
+  const pop = h.pop, r = pop > 0 ? Math.min(ration, h.korn) / pop : 1;
+  const cap = capacity(s, h);
+  const room = clamp(((cap - pop) / cap) * 3, -0.5, 1);
+  const jf = h.def.bonus === 'justice' ? 0.5 : 1;
+  const born = Math.round(pop * 0.032 * Math.min(1, r));
+  const died = Math.round(pop * 0.02);
+  const immig = r > 1 ? Math.round(pop * Math.min(r - 1, 0.8) * 0.12 * Math.max(0, room) * (h.rep / 50)) : 0;
+  const starved = r < 1 ? Math.round(pop * (1 - r) * 0.3) : 0;
+  const emig = Math.round(pop * (r < 0.9 ? (0.9 - r) * 0.15 : 0) + pop * 0.012 * Math.max(0, h.justice - 2) * jf
+    + pop * 0.005 * Math.max(0, h.tax - 25) + Math.max(0, pop - cap) * 0.1);
+  const repDelta = clamp((r - 1) * 20, -10, 6) - (h.justice - 2) * 3 * jf - Math.max(0, h.tax - 25) * 0.4;
+  return { born, died, immig, starved, emig, delta: born + immig - died - starved - emig, repDelta };
+}
+
 function simulate(s: GameState, h: House) {
   const sum: Summary = { tax: 0, markets: 0, fines: 0, other: 0, court: 0, army: 0, interest: 0, net: 0, popStart: h.pop, popEnd: 0, born: 0, died: 0, starved: 0, immig: 0, emig: 0, eaten: 0, spoiled: 0 };
   const ev = (kind: string, title: string, text: string) => h.events.push({ kind, title, text });
   const pop = h.pop;
   const ration = clamp(Math.round(h.ration), 0, h.korn);
+  const f = popForecast(s, h, ration);
   h.korn -= ration; sum.eaten = ration;
   const r = pop > 0 ? ration / pop : 1;
-  const markets = count(s, h.idx, 'markt');
-  const cap = capacity(s, h);
-  const room = clamp(((cap - pop) / cap) * 3, -0.5, 1);
-  sum.born = Math.round(pop * 0.032 * Math.min(1, r));
-  sum.died = Math.round(pop * 0.02);
-  sum.immig = r > 1 ? Math.round(pop * Math.min(r - 1, 0.8) * 0.12 * Math.max(0, room) * (h.rep / 50)) : 0;
-  sum.starved = r < 1 ? Math.round(pop * (1 - r) * 0.3) : 0;
+  sum.born = f.born; sum.died = f.died; sum.immig = f.immig; sum.starved = f.starved; sum.emig = f.emig;
   const jf = h.def.bonus === 'justice' ? 0.5 : 1;
-  sum.emig = Math.round(pop * (r < 0.9 ? (0.9 - r) * 0.15 : 0) + pop * 0.012 * Math.max(0, h.justice - 2) * jf
-    + pop * 0.005 * Math.max(0, h.tax - 25) + Math.max(0, pop - cap) * 0.1);
   // Geld
   const inc = income(s, h);
   Object.assign(sum, inc);
